@@ -1,0 +1,31 @@
+{
+  "name": "Employee",
+  "type": "object",
+  "properties": {
+    "registration": {
+      "type": "string",
+      "description": "Matr\u00edcula do funcion\u00e1rio"
+    },
+    "name": {
+      "type": "string",
+      "description": "Nome completo"
+    },
+    "role": {
+      "type": "string",
+      "description": "Cargo"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Setor"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Funcion\u00e1rio ativo"
+    }
+  },
+  "required": [
+    "registration",
+    "name"
+  ]
+}

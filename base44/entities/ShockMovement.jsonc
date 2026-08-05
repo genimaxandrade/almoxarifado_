@@ -1,0 +1,71 @@
+{
+  "name": "StockMovement",
+  "type": "object",
+  "properties": {
+    "item_id": {
+      "type": "string",
+      "description": "ID do item"
+    },
+    "item_code": {
+      "type": "string",
+      "description": "C\u00f3digo do item"
+    },
+    "item_name": {
+      "type": "string",
+      "description": "Nome do item"
+    },
+    "movement_type": {
+      "type": "string",
+      "enum": [
+        "entrada",
+        "saida"
+      ],
+      "description": "Tipo de movimenta\u00e7\u00e3o"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantidade movimentada"
+    },
+    "date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data da movimenta\u00e7\u00e3o"
+    },
+    "destination": {
+      "type": "string",
+      "description": "Destino/setor (para sa\u00eddas)"
+    },
+    "responsible": {
+      "type": "string",
+      "description": "Respons\u00e1vel pela movimenta\u00e7\u00e3o"
+    },
+    "invoice_number": {
+      "type": "string",
+      "description": "N\u00famero da nota fiscal (para entradas)"
+    },
+    "purchase_order": {
+      "type": "string",
+      "description": "Pedido de compra (para entradas)"
+    },
+    "supplier": {
+      "type": "string",
+      "description": "Fornecedor (para entradas)"
+    },
+    "unit_price": {
+      "type": "number",
+      "description": "Valor unit\u00e1rio (para entradas)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es"
+    }
+  },
+  "required": [
+    "item_id",
+    "item_code",
+    "item_name",
+    "movement_type",
+    "quantity",
+    "date"
+  ]
+}

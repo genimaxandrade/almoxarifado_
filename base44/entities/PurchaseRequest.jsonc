@@ -1,0 +1,72 @@
+{
+  "name": "PurchaseRequest",
+  "type": "object",
+  "properties": {
+    "item_id": {
+      "type": "string",
+      "description": "ID do item no estoque"
+    },
+    "item_code": {
+      "type": "string",
+      "description": "C\u00f3digo do item"
+    },
+    "item_name": {
+      "type": "string",
+      "description": "Nome do item"
+    },
+    "item_type": {
+      "type": "string",
+      "description": "Tipo do item"
+    },
+    "unit": {
+      "type": "string",
+      "description": "Unidade de medida"
+    },
+    "current_quantity": {
+      "type": "number",
+      "description": "Quantidade atual no estoque"
+    },
+    "minimum_stock": {
+      "type": "number",
+      "description": "Estoque m\u00ednimo"
+    },
+    "requested_quantity": {
+      "type": "number",
+      "description": "Quantidade a comprar"
+    },
+    "last_unit_price": {
+      "type": "number",
+      "description": "\u00daltimo pre\u00e7o unit\u00e1rio registrado"
+    },
+    "supplier": {
+      "type": "string",
+      "description": "Fornecedor sugerido"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "aprovado",
+        "comprado",
+        "cancelado"
+      ],
+      "default": "pendente",
+      "description": "Status da solicita\u00e7\u00e3o"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de expira\u00e7\u00e3o autom\u00e1tica (30 dias)"
+    }
+  },
+  "required": [
+    "item_id",
+    "item_code",
+    "item_name",
+    "requested_quantity"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "UserPermission",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Nome do usu\u00e1rio"
+    },
+    "access_level": {
+      "type": "string",
+      "enum": [
+        "somente_visualizacao",
+        "visualizacao_edicao",
+        "aba_especifica"
+      ],
+      "default": "somente_visualizacao",
+      "description": "N\u00edvel de acesso do usu\u00e1rio"
+    },
+    "allowed_pages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "P\u00e1ginas permitidas (usado quando access_level = aba_especifica)"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Permiss\u00e3o ativa"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es"
+    }
+  },
+  "required": [
+    "user_email",
+    "access_level"
+  ]
+}
