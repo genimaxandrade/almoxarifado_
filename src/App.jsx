@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ItemModal } from '@/components/ItemModal';
+import { exportItemsToExcel, importItemsFromExcel, downloadTemplate } from '@/utils/excelUtils';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -13,6 +15,10 @@ function App() {
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
   const [userName, setUserName] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [importError, setImportError] = useState('');
 
   useEffect(() => {
     checkUser();
@@ -99,6 +105,70 @@ function App() {
     } catch (err) {
       console.error('Erro ao fazer logout:', err);
     }
+  };
+
+  const handleSaveItem = async (formData) => {
+    setIsSaving(true);
+    try {
+      if (editingItem) {
+        const { error } = await supabase
+          .from('items')
+          .update(formData)
+          .eq('id', editingItem.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('items').insert([formData]);
+        if (error) throw error;
+      }
+      setIsModalOpen(false);
+      setEditingItem(null);
+      await loadItems();
+    } catch (err) {
+      setError(err.message || 'Erro ao salvar item');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteItem = async (id) => {
+    if (window.confirm('Tem certeza que deseja deletar este item?')) {
+      try {
+        const { error } = await supabase.from('items').delete().eq('id', id);
+        if (error) throw error;
+        await loadItems();
+      } catch (err) {
+        setError(err.message || 'Erro ao deletar item');
+      }
+    }
+  };
+
+  const handleExportItems = () => {
+    exportItemsToExcel(items);
+  };
+
+  const handleImportItems = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportError('');
+    try {
+      const importedItems = await importItemsFromExcel(file);
+      
+      // Inserir itens no banco de dados
+      const { error } = await supabase.from('items').insert(importedItems);
+      if (error) throw error;
+
+      setImportError(`✅ ${importedItems.length} item(ns) importado(s) com sucesso!`);
+      await loadItems();
+      
+      // Limpar mensagem após 3 segundos
+      setTimeout(() => setImportError(''), 3000);
+    } catch (err) {
+      setImportError(`❌ Erro ao importar: ${err.message}`);
+    }
+
+    // Limpar input
+    e.target.value = '';
   };
 
   if (loading) {
@@ -195,9 +265,57 @@ function App() {
         {/* Main Content */}
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white">Itens em Estoque</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-white">Itens em Estoque</CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    setEditingItem(null);
+                    setIsModalOpen(true);
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  + Novo Item
+                </Button>
+                <Button
+                  onClick={handleExportItems}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  📥 Exportar
+                </Button>
+                <Button
+                  onClick={downloadTemplate}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  📋 Modelo
+                </Button>
+                <label className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md cursor-pointer inline-block">
+                  📤 Importar
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleImportItems}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
+            {importError && (
+              <div className={`p-3 rounded-md text-sm mb-4 ${
+                importError.includes('✅')
+                  ? 'bg-green-900 text-green-300 border border-green-700'
+                  : 'bg-red-900 text-red-300 border border-red-700'
+              }`}>
+                {importError}
+              </div>
+            )}
+            {error && (
+              <div className="p-3 rounded-md text-sm mb-4 bg-red-900 text-red-300 border border-red-700">
+                {error}
+              </div>
+            )}
             {items.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 Nenhum item encontrado. Crie o primeiro item!
@@ -212,6 +330,7 @@ function App() {
                       <th className="px-4 py-3 text-left text-gray-300 font-semibold">Tipo</th>
                       <th className="px-4 py-3 text-left text-gray-300 font-semibold">Unidade</th>
                       <th className="px-4 py-3 text-left text-gray-300 font-semibold">Quantidade</th>
+                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -237,6 +356,25 @@ function App() {
                             {item.quantity}
                           </span>
                         </td>
+                        <td className="px-4 py-3 space-x-2">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setEditingItem(item);
+                              setIsModalOpen(true);
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                          >
+                            Deletar
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -251,6 +389,15 @@ function App() {
           <p>© 2026 Almoxarifado de Genimax. Todos os direitos reservados.</p>
         </div>
       </div>
+
+      {/* Modal */}
+      <ItemModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSave={handleSaveItem}
+        editingItem={editingItem}
+        isLoading={isSaving}
+      />
     </div>
   );
 }
