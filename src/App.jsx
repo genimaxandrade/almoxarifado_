@@ -12,12 +12,16 @@ function App() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     checkUser();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setUser(session?.user || null);
+        if (session?.user) {
+          extractUserName(session.user.email);
+        }
         setLoading(false);
       }
     );
@@ -34,10 +38,20 @@ function App() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
+      if (session?.user) {
+        extractUserName(session.user.email);
+      }
     } catch (err) {
       console.error('Erro ao verificar usuário:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const extractUserName = (email) => {
+    if (email) {
+      const name = email.split('@')[0];
+      setUserName(name.charAt(0).toUpperCase() + name.slice(1));
     }
   };
 
@@ -81,6 +95,7 @@ function App() {
       await supabase.auth.signOut();
       setUser(null);
       setItems([]);
+      setUserName('');
     } catch (err) {
       console.error('Erro ao fazer logout:', err);
     }
@@ -88,55 +103,63 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="w-8 h-8 border-4 border-gray-700 border-t-gray-400 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Almoxarifado</CardTitle>
+            <CardTitle className="text-2xl text-center text-white">Almoxarifado</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAuth} className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Email</label>
+                <label className="text-sm font-medium text-gray-300">Email</label>
                 <Input
                   type="email"
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Senha</label>
+                <label className="text-sm font-medium text-gray-300">Senha</label>
                 <Input
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                 />
               </div>
               {error && (
                 <div className={`p-3 rounded-md text-sm ${
-                  error.includes('Verifique') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                  error.includes('Verifique') 
+                    ? 'bg-green-900 text-green-300 border border-green-700' 
+                    : 'bg-red-900 text-red-300 border border-red-700'
                 }`}>
                   {error}
                 </div>
               )}
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                disabled={loading}
+              >
                 {loading ? 'Carregando...' : isSignUp ? 'Criar Conta' : 'Entrar'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
                 onClick={() => {
                   setIsSignUp(!isSignUp);
                   setError('');
@@ -152,21 +175,27 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900">
       <div className="max-w-6xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-700">
           <div>
-            <h1 className="text-3xl font-bold">Almoxarifado</h1>
-            <p className="text-gray-600">Bem-vindo, {user.email}</p>
+            <h1 className="text-3xl font-bold text-white">Almoxarifado</h1>
+            <p className="text-gray-400">Bem-vindo, <span className="text-blue-400 font-semibold">{userName}</span></p>
           </div>
-          <Button onClick={handleLogout} variant="outline">
+          <Button 
+            onClick={handleLogout} 
+            variant="outline"
+            className="bg-red-600 hover:bg-red-700 border-red-700 text-white"
+          >
             Sair
           </Button>
         </div>
 
-        <Card>
+        {/* Main Content */}
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle>Itens em Estoque</CardTitle>
+            <CardTitle className="text-white">Itens em Estoque</CardTitle>
           </CardHeader>
           <CardContent>
             {items.length === 0 ? (
@@ -176,23 +205,38 @@ function App() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-100">
+                  <thead className="bg-gray-700 border-b border-gray-600">
                     <tr>
-                      <th className="px-4 py-2 text-left">Código</th>
-                      <th className="px-4 py-2 text-left">Nome</th>
-                      <th className="px-4 py-2 text-left">Tipo</th>
-                      <th className="px-4 py-2 text-left">Unidade</th>
-                      <th className="px-4 py-2 text-left">Quantidade</th>
+                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Código</th>
+                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Nome</th>
+                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Tipo</th>
+                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Unidade</th>
+                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Quantidade</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((item) => (
-                      <tr key={item.id} className="border-t">
-                        <td className="px-4 py-2">{item.code}</td>
-                        <td className="px-4 py-2">{item.name}</td>
-                        <td className="px-4 py-2">{item.type}</td>
-                        <td className="px-4 py-2">{item.unit}</td>
-                        <td className="px-4 py-2">{item.quantity}</td>
+                    {items.map((item, index) => (
+                      <tr 
+                        key={item.id} 
+                        className={`border-t border-gray-700 hover:bg-gray-700 transition ${
+                          index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750'
+                        }`}
+                      >
+                        <td className="px-4 py-3 text-gray-300">{item.code}</td>
+                        <td className="px-4 py-3 text-gray-300">{item.name}</td>
+                        <td className="px-4 py-3 text-gray-400 text-sm">{item.type}</td>
+                        <td className="px-4 py-3 text-gray-400">{item.unit}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            item.quantity > 10 
+                              ? 'bg-green-900 text-green-300' 
+                              : item.quantity > 0 
+                              ? 'bg-yellow-900 text-yellow-300' 
+                              : 'bg-red-900 text-red-300'
+                          }`}>
+                            {item.quantity}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -201,6 +245,11 @@ function App() {
             )}
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-gray-500 text-sm">
+          <p>© 2026 Almoxarifado de Genimax. Todos os direitos reservados.</p>
+        </div>
       </div>
     </div>
   );
