@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AppLayout } from '@/components/AppLayout';
 import { ItemModal } from '@/components/ItemModal';
 import { exportItemsToExcel, importItemsFromExcel, downloadTemplate } from '@/utils/excelUtils';
 
@@ -154,20 +155,17 @@ function App() {
     try {
       const importedItems = await importItemsFromExcel(file);
       
-      // Inserir itens no banco de dados
       const { error } = await supabase.from('items').insert(importedItems);
       if (error) throw error;
 
       setImportError(`✅ ${importedItems.length} item(ns) importado(s) com sucesso!`);
       await loadItems();
       
-      // Limpar mensagem após 3 segundos
       setTimeout(() => setImportError(''), 3000);
     } catch (err) {
       setImportError(`❌ Erro ao importar: ${err.message}`);
     }
 
-    // Limpar input
     e.target.value = '';
   };
 
@@ -245,29 +243,13 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      <div className="max-w-6xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-700">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Almoxarifado</h1>
-            <p className="text-gray-400">Bem-vindo, <span className="text-blue-400 font-semibold">{userName}</span></p>
-          </div>
-          <Button 
-            onClick={handleLogout} 
-            variant="outline"
-            className="bg-red-600 hover:bg-red-700 border-red-700 text-white"
-          >
-            Sair
-          </Button>
-        </div>
-
-        {/* Main Content */}
+    <AppLayout onLogout={handleLogout} userName={userName}>
+      <div className="space-y-6">
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-4">
               <CardTitle className="text-white">Itens em Estoque</CardTitle>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   onClick={() => {
                     setEditingItem(null);
@@ -384,13 +366,11 @@ function App() {
           </CardContent>
         </Card>
 
-        {/* Footer */}
-        <div className="mt-8 text-center text-gray-500 text-sm">
+        <div className="text-center text-gray-500 text-sm">
           <p>© 2026 Almoxarifado de Genimax. Todos os direitos reservados.</p>
         </div>
       </div>
 
-      {/* Modal */}
       <ItemModal
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
@@ -398,7 +378,7 @@ function App() {
         editingItem={editingItem}
         isLoading={isSaving}
       />
-    </div>
+    </AppLayout>
   );
 }
 
