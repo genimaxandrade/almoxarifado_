@@ -3,9 +3,25 @@ import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AppLayout } from '@/components/AppLayout';
+import { Sidebar } from '@/components/Sidebar';
+import { usePermissions } from '@/hooks/usePermissions';
 import { ItemModal } from '@/components/ItemModal';
 import { exportItemsToExcel, importItemsFromExcel, downloadTemplate } from '@/utils/excelUtils';
+
+// Páginas
+import { SaidaMaterial } from '@/pages/SaidaMaterial';
+import { ReposicaoEstoque } from '@/pages/ReposicaoEstoque';
+import { SolicitacoesCompra } from '@/pages/SolicitacoesCompra';
+import { Alertas } from '@/pages/Alertas';
+import { HistoricoDiario } from '@/pages/HistoricoDiario';
+import { RelatorioMensal } from '@/pages/RelatorioMensal';
+import { Estatisticas } from '@/pages/Estatisticas';
+import { HistoricoPrecos } from '@/pages/HistoricoPrecos';
+import { Graficos } from '@/pages/Graficos';
+import { Funcionarios } from '@/pages/Funcionarios';
+import { Etiquetas } from '@/pages/Etiquetas';
+import { Backup } from '@/pages/Backup';
+import { Ajuda } from '@/pages/Ajuda';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -16,10 +32,14 @@ function App() {
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
   const [userName, setUserName] = useState('');
+  const [currentPage, setCurrentPage] = useState('saida');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [importError, setImportError] = useState('');
+
+  // Permissões
+  const { userRole } = usePermissions(user);
 
   useEffect(() => {
     checkUser();
@@ -103,6 +123,7 @@ function App() {
       setUser(null);
       setItems([]);
       setUserName('');
+      setCurrentPage('saida');
     } catch (err) {
       console.error('Erro ao fazer logout:', err);
     }
@@ -167,6 +188,46 @@ function App() {
     }
 
     e.target.value = '';
+  };
+
+  const handleNavigate = (pageId) => {
+    setCurrentPage(pageId);
+  };
+
+  // Renderizar página atual
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'controle':
+        return null; // Será renderizado abaixo
+      case 'saida':
+        return <SaidaMaterial items={items} />;
+      case 'reposicao':
+        return <ReposicaoEstoque items={items} />;
+      case 'solicitacoes':
+        return <SolicitacoesCompra />;
+      case 'alertas':
+        return <Alertas />;
+      case 'historico_diario':
+        return <HistoricoDiario />;
+      case 'relatorio_mensal':
+        return <RelatorioMensal />;
+      case 'estatisticas':
+        return <Estatisticas />;
+      case 'historico_precos':
+        return <HistoricoPrecos />;
+      case 'graficos':
+        return <Graficos />;
+      case 'funcionarios':
+        return <Funcionarios />;
+      case 'etiquetas':
+        return <Etiquetas />;
+      case 'backup':
+        return <Backup />;
+      case 'ajuda':
+        return <Ajuda />;
+      default:
+        return null;
+    }
   };
 
   if (loading) {
@@ -243,134 +304,164 @@ function App() {
   }
 
   return (
-    <AppLayout onLogout={handleLogout} userName={userName}>
-      <div className="space-y-6">
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <div className="flex justify-between items-center flex-wrap gap-4">
-              <CardTitle className="text-white">Itens em Estoque</CardTitle>
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  onClick={() => {
-                    setEditingItem(null);
-                    setIsModalOpen(true);
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  + Novo Item
-                </Button>
-                <Button
-                  onClick={handleExportItems}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  📥 Exportar
-                </Button>
-                <Button
-                  onClick={downloadTemplate}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  📋 Modelo
-                </Button>
-                <label className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md cursor-pointer inline-block">
-                  📤 Importar
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    onChange={handleImportItems}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {importError && (
-              <div className={`p-3 rounded-md text-sm mb-4 ${
-                importError.includes('✅')
-                  ? 'bg-green-900 text-green-300 border border-green-700'
-                  : 'bg-red-900 text-red-300 border border-red-700'
-              }`}>
-                {importError}
-              </div>
-            )}
-            {error && (
-              <div className="p-3 rounded-md text-sm mb-4 bg-red-900 text-red-300 border border-red-700">
-                {error}
-              </div>
-            )}
-            {items.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                Nenhum item encontrado. Crie o primeiro item!
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-700 border-b border-gray-600">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Código</th>
-                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Nome</th>
-                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Tipo</th>
-                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Unidade</th>
-                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Quantidade</th>
-                      <th className="px-4 py-3 text-left text-gray-300 font-semibold">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((item, index) => (
-                      <tr 
-                        key={item.id} 
-                        className={`border-t border-gray-700 hover:bg-gray-700 transition ${
-                          index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750'
-                        }`}
-                      >
-                        <td className="px-4 py-3 text-gray-300">{item.code}</td>
-                        <td className="px-4 py-3 text-gray-300">{item.name}</td>
-                        <td className="px-4 py-3 text-gray-400 text-sm">{item.type}</td>
-                        <td className="px-4 py-3 text-gray-400">{item.unit}</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                            item.quantity > 10 
-                              ? 'bg-green-900 text-green-300' 
-                              : item.quantity > 0 
-                              ? 'bg-yellow-900 text-yellow-300' 
-                              : 'bg-red-900 text-red-300'
-                          }`}>
-                            {item.quantity}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 space-x-2">
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setEditingItem(item);
-                              setIsModalOpen(true);
-                            }}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                          >
-                            Editar
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="bg-red-600 hover:bg-red-700 text-white"
-                          >
-                            Deletar
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-gray-900 flex">
+      {/* Sidebar */}
+      <Sidebar
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        userRole={userRole}
+        userName={userName}
+        onLogout={handleLogout}
+      />
 
-        <div className="text-center text-gray-500 text-sm">
-          <p>© 2026 Almoxarifado de Genimax. Todos os direitos reservados.</p>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <div className="bg-gray-800 border-b border-gray-700 px-6 py-4 lg:pl-[17rem]">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-white text-xl font-semibold">
+                Bem-vindo, {userName}
+              </h2>
+              <p className="text-gray-400 text-sm capitalize">
+                {userRole === 'admin' ? 'Administrador' : 'Usuário'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto p-6 lg:pl-[17rem]">
+          {currentPage === 'controle' ? (
+            <div className="space-y-6">
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader>
+                  <div className="flex justify-between items-center flex-wrap gap-4">
+                    <CardTitle className="text-white">Itens em Estoque</CardTitle>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        onClick={() => {
+                          setEditingItem(null);
+                          setIsModalOpen(true);
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        + Novo Item
+                      </Button>
+                      <Button
+                        onClick={handleExportItems}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        📥 Exportar
+                      </Button>
+                      <Button
+                        onClick={downloadTemplate}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        📋 Modelo
+                      </Button>
+                      <label className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md cursor-pointer inline-block">
+                        📤 Importar
+                        <input
+                          type="file"
+                          accept=".xlsx,.xls,.csv"
+                          onChange={handleImportItems}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {importError && (
+                    <div className={`p-3 rounded-md text-sm mb-4 ${
+                      importError.includes('✅')
+                        ? 'bg-green-900 text-green-300 border border-green-700'
+                        : 'bg-red-900 text-red-300 border border-red-700'
+                    }`}>
+                      {importError}
+                    </div>
+                  )}
+                  {error && (
+                    <div className="p-3 rounded-md text-sm mb-4 bg-red-900 text-red-300 border border-red-700">
+                      {error}
+                    </div>
+                  )}
+                  {items.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      Nenhum item encontrado. Crie o primeiro item!
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-700 border-b border-gray-600">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">Código</th>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">Nome</th>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">Tipo</th>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">Unidade</th>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">Quantidade</th>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {items.map((item, index) => (
+                            <tr 
+                              key={item.id} 
+                              className={`border-t border-gray-700 hover:bg-gray-700 transition ${
+                                index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750'
+                              }`}
+                            >
+                              <td className="px-4 py-3 text-gray-300">{item.code}</td>
+                              <td className="px-4 py-3 text-gray-300">{item.name}</td>
+                              <td className="px-4 py-3 text-gray-400 text-sm">{item.type}</td>
+                              <td className="px-4 py-3 text-gray-400">{item.unit}</td>
+                              <td className="px-4 py-3">
+                                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                  item.quantity > 10 
+                                    ? 'bg-green-900 text-green-300' 
+                                    : item.quantity > 0 
+                                    ? 'bg-yellow-900 text-yellow-300' 
+                                    : 'bg-red-900 text-red-300'
+                                }`}>
+                                  {item.quantity}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 space-x-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingItem(item);
+                                    setIsModalOpen(true);
+                                  }}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                  Editar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleDeleteItem(item.id)}
+                                  className="bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                  Deletar
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            renderPage()
+          )}
         </div>
       </div>
 
+      {/* Item Modal */}
       <ItemModal
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
@@ -378,7 +469,7 @@ function App() {
         editingItem={editingItem}
         isLoading={isSaving}
       />
-    </AppLayout>
+    </div>
   );
 }
 
