@@ -406,6 +406,8 @@ function App() {
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Código</th>
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Nome</th>
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Tipo</th>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">CA</th>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">Patrimônio</th>
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Unidade</th>
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Quantidade</th>
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Ações</th>
@@ -421,7 +423,19 @@ function App() {
                             >
                               <td className="px-4 py-3 text-gray-300">{item.code}</td>
                               <td className="px-4 py-3 text-gray-300">{item.name}</td>
-                              <td className="px-4 py-3 text-gray-400 text-sm">{item.type}</td>
+                              <td className="px-4 py-3 text-gray-400 text-sm">
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                  item.type === 'epi' 
+                                    ? 'bg-orange-900/50 text-orange-300' 
+                                    : item.type === 'ferramenta' 
+                                    ? 'bg-blue-900/50 text-blue-300' 
+                                    : 'bg-gray-700 text-gray-400'
+                                }`}>
+                                  {item.type === 'epi' ? 'EPI' : item.type === 'ferramenta' ? 'Ferramenta' : 'Material'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-gray-400 text-sm">{item.ca || '-'}</td>
+                              <td className="px-4 py-3 text-gray-400 text-sm">{item.patrimonio || '-'}</td>
                               <td className="px-4 py-3 text-gray-400">{item.unit}</td>
                               <td className="px-4 py-3">
                                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
