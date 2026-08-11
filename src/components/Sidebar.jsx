@@ -25,10 +25,11 @@ const menuStructure = [
   {
     section: 'MÓDULO OPERACIONAL',
     items: [
+      { id: 'controle', label: 'Controle de Estoque', icon: Package, description: 'Gerenciar itens do estoque' },
       { id: 'saida', label: 'Saída de Material', icon: ArrowDown, description: 'Registrar retirada de itens' },
       { id: 'reposicao', label: 'Reposição de Estoque', icon: ArrowUp, description: 'Atualizar quantidades' },
       { id: 'solicitacoes', label: 'Solicitações de Compra', icon: ShoppingCart, description: 'Criar pedidos de compra' },
-      { id: 'alertas', label: 'Alertas', icon: Bell, description: 'Notificações do sistema', badge: 3 },
+      { id: 'alertas', label: 'Alertas', icon: Bell, description: 'Notificações do sistema' },
     ],
   },
   {

@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ItemModal } from '@/components/ItemModal';
 import { exportItemsToExcel, importItemsFromExcel, downloadTemplate } from '@/utils/excelUtils';
+import { generateMonthlyReport } from '@/utils/pdfReport';
 
 // Páginas
 import { SaidaMaterial } from '@/pages/SaidaMaterial';
@@ -32,7 +33,7 @@ function App() {
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
   const [userName, setUserName] = useState('');
-  const [currentPage, setCurrentPage] = useState('saida');
+  const [currentPage, setCurrentPage] = useState('controle');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -200,13 +201,13 @@ function App() {
       case 'controle':
         return null; // Será renderizado abaixo
       case 'saida':
-        return <SaidaMaterial items={items} />;
+        return <SaidaMaterial items={items} onItemsUpdated={loadItems} />;
       case 'reposicao':
-        return <ReposicaoEstoque items={items} />;
+        return <ReposicaoEstoque items={items} onItemsUpdated={loadItems} />;
       case 'solicitacoes':
         return <SolicitacoesCompra />;
       case 'alertas':
-        return <Alertas />;
+        return <Alertas items={items} />;
       case 'historico_diario':
         return <HistoricoDiario />;
       case 'relatorio_mensal':
@@ -222,7 +223,7 @@ function App() {
       case 'etiquetas':
         return <Etiquetas />;
       case 'backup':
-        return <Backup />;
+        return <Backup items={items} onItemsUpdated={loadItems} />;
       case 'ajuda':
         return <Ajuda />;
       default:
@@ -338,6 +339,12 @@ function App() {
                 <CardHeader>
                   <div className="flex justify-between items-center flex-wrap gap-4">
                     <CardTitle className="text-white">Itens em Estoque</CardTitle>
+                    <Button
+                      onClick={() => generateMonthlyReport(user?.email)}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      📄 Relatório PDF
+                    </Button>
                     <div className="flex gap-2 flex-wrap">
                       <Button
                         onClick={() => {
