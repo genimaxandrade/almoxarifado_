@@ -21,17 +21,22 @@ export function usePermissions(user) {
 
     const fetchUserRole = async () => {
       try {
+        // Usar .maybeSingle() que não falha se houver 0 ou múltiplos resultados
         const { data, error } = await supabase
           .from('user_permissions')
           .select('access_level')
           .eq('user_email', user.email)
-          .single();
+          .maybeSingle();
 
         if (error) {
-          // Se não encontrar permissão, usa 'user' por padrão
+          console.error('Erro ao buscar permissões:', error);
           setUserRole('user');
+        } else if (data?.access_level) {
+          setUserRole(data.access_level);
+          console.log('User role set to:', data.access_level);
         } else {
-          setUserRole(data?.access_level || 'user');
+          setUserRole('user');
+          console.log('No permission found, default to user');
         }
       } catch (err) {
         console.error('Erro ao buscar permissões:', err);
