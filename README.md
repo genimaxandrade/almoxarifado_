@@ -1,39 +1,47 @@
-**Welcome to your Base44 project** 
+# Almoxarifado
 
-**About**
+Sistema de controle de almoxarifado. Migrado do Base44 para **Supabase**
+(banco de dados + autenticação) e hospedado na **Vercel**.
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+## Rodando localmente
 
-This project contains everything you need to run your app locally.
+1. Instale as dependências:
+   ```
+   npm install
+   ```
+2. Crie o arquivo `.env.local` (baseado no `.env.example`) com as chaves do seu projeto Supabase:
+   ```
+   VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+   VITE_SUPABASE_ANON_KEY=sua-anon-key
+   ```
+   Essas chaves ficam em Supabase Dashboard → Settings → API.
+3. No SQL Editor do Supabase, rode o arquivo `supabase_schema.sql` deste
+   repositório para criar as tabelas e as políticas de segurança (RLS).
+4. Rode o app:
+   ```
+   npm run dev
+   ```
+5. Cadastre-se pela tela de login. Depois, torne seu usuário admin rodando
+   no SQL Editor (trocando o e-mail):
+   ```sql
+   update public.profiles set role = 'admin'
+   where id = (select id from auth.users where email = 'seu@email.com');
+   ```
 
-**Edit the code in your local development environment**
+## Deploy na Vercel
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+1. Suba este repositório para o GitHub.
+2. Na Vercel, importe o repositório (framework detectado: Vite).
+3. Em Settings → Environment Variables, adicione `VITE_SUPABASE_URL` e
+   `VITE_SUPABASE_ANON_KEY` com os mesmos valores do `.env.local`.
+4. Em Supabase → Authentication → URL Configuration, adicione a URL da
+   Vercel em Site URL e Redirect URLs.
 
-**Prerequisites:** 
+## Estrutura
 
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
-
-```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
-
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
-```
-
-Run the app: `npm run dev`
-
-**Publish your changes**
-
-Open [Base44.com](http://Base44.com) and click on Publish.
-
-**Docs & Support**
-
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+- `src/lib/supabaseClient.js` — cliente do Supabase (lê as variáveis de ambiente).
+- `src/api/entities.js` — funções de CRUD (Item, Employee, StockMovement,
+  PurchaseRequest, UserPermission) que conversam com as tabelas do Supabase.
+- `src/lib/AuthContext.jsx` — autenticação (login, cadastro, sessão, papel do usuário).
+- `src/pages/Login.jsx` — tela de login/cadastro.
+- `supabase_schema.sql` — script para criar as tabelas e regras de segurança no Supabase.
