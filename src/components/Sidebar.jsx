@@ -45,7 +45,7 @@ const menuStructure = [
   {
     section: 'MÓDULO DE CONFIGURAÇÕES',
     items: [
-      { id: 'funcionarios', label: 'Funcionários', icon: Users, description: 'CRUD de usuários', adminOnly: true },
+      { id: 'funcionarios', label: 'Funcionários', icon: Users, description: 'CRUD de usuários', adminOnly: false },
       { id: 'etiquetas', label: 'Etiquetas', icon: Tag, description: 'Geração de códigos' },
       { id: 'backup', label: 'Backup', icon: Database, description: 'Exportação/importação' },
       { id: 'ajuda', label: 'Ajuda', icon: HelpCircle, description: 'Documentação e suporte' },
