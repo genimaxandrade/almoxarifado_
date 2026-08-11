@@ -19,6 +19,7 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  ShieldAlert,
 } from 'lucide-react';
 
 const menuStructure = [
@@ -45,7 +46,8 @@ const menuStructure = [
   {
     section: 'MÓDULO DE CONFIGURAÇÕES',
     items: [
-      { id: 'funcionarios', label: 'Funcionários', icon: Users, description: 'CRUD de usuários', adminOnly: false },
+      { id: 'funcionarios', label: 'Funcionários', icon: Users, description: 'CRUD de usuários', adminOnly: true },
+      { id: 'permissoes', label: 'Permissões', icon: ShieldAlert, description: 'Gerenciar permissões', adminOnly: true },
       { id: 'etiquetas', label: 'Etiquetas', icon: Tag, description: 'Geração de códigos' },
       { id: 'backup', label: 'Backup', icon: Database, description: 'Exportação/importação' },
       { id: 'ajuda', label: 'Ajuda', icon: HelpCircle, description: 'Documentação e suporte' },

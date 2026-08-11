@@ -22,11 +22,24 @@ https://almoxarifado-delta.vercel.app
 - Lucide-react para ícones
 
 ## Localização do Bloqueio de Funcionários
-- Sidebar.jsx, linha 48: `adminOnly: true` no item Funcionários
+- Sidebar.jsx, linha 48: `adminOnly: false` (foi desbloqueado)
 - Sidebar.jsx, linha 88-93: `handleNavigation` verifica `isAdminOnly && userRole !== 'admin'`
 - Sidebar.jsx, linha 132: `isDisabled = isAdminOnly && userRole !== 'admin'`
 
+## Estado Atual (Atualizado)
+- Funcionários desbloqueado (adminOnly: false)
+- Importação/Exportação de funcionários via Excel: src/utils/employeeExcelUtils.js
+- Campo data_vencimento_ca removido de Funcionários (mantido apenas em items/Controle de Estoque)
+- Painel de Gerenciamento de Permissões: src/pages/GerenciamentoPermissoes.jsx (recebe prop currentUser)
+- usePermissions hook: src/hooks/usePermissions.js (userRole, isAdmin, canAccess, loading)
+
+## Colunas da tabela employees
+- id, name, email, position, department, access_level, created_at
+- (data_vencimento_ca foi removido do código de Funcionários)
+
+## Colunas da tabela items
+- id, code, name, type, unit, quantity, ca, patrimonio, data_validade_ca, estoque_minimo, created_at
+
 ## Pendências para corrigir
-1. Desbloquear Funcionários: remover `adminOnly: true` ou mudar para false
-2. Adicionar importação de funcionários via Excel/CSV
-3. Adicionar campo `data_vencimento_ca` na tabela employees
+1. Integrar GerenciamentoPermissoes no App.jsx
+2. Restaurar adminOnly: true nos itens protegidos da Sidebar (funcionarios deve voltar a ser adminOnly)

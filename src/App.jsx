@@ -20,6 +20,7 @@ import { Estatisticas } from '@/pages/Estatisticas';
 import { HistoricoPrecos } from '@/pages/HistoricoPrecos';
 import { Graficos } from '@/pages/Graficos';
 import { Funcionarios } from '@/pages/Funcionarios';
+import { GerenciamentoPermissoes } from '@/pages/GerenciamentoPermissoes';
 import { Etiquetas } from '@/pages/Etiquetas';
 import { Backup } from '@/pages/Backup';
 import { Ajuda } from '@/pages/Ajuda';
@@ -220,6 +221,8 @@ function App() {
         return <Graficos />;
       case 'funcionarios':
         return <Funcionarios />;
+      case 'permissoes':
+        return <GerenciamentoPermissoes currentUser={user} />;
       case 'etiquetas':
         return <Etiquetas />;
       case 'backup':
