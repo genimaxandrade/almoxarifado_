@@ -1,42 +1,79 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell, AlertTriangle, AlertCircle, Info } from 'lucide-react';
 
-const alertas = [
-  {
-    id: 1,
-    type: 'urgente',
-    title: 'Estoque Crítico: Parafuso M6',
-    message: 'Quantidade abaixo do mínimo (5 unidades restantes)',
-    icon: AlertTriangle,
-    color: 'red',
-  },
-  {
-    id: 2,
-    type: 'aviso',
-    title: 'Reposição Necessária: Porca M8',
-    message: 'Solicitação de compra pendente há 3 dias',
-    icon: AlertCircle,
-    color: 'yellow',
-  },
-  {
-    id: 3,
-    type: 'info',
-    title: 'Movimentação Registrada',
-    message: 'Nova saída de material registrada hoje',
-    icon: Info,
-    color: 'blue',
-  },
-];
+export function Alertas({ items }) {
+  const [alertas, setAlertas] = useState([]);
 
-export function Alertas() {
+  useEffect(() => {
+    generateAlertas();
+  }, [items]);
+
+  const generateAlertas = () => {
+    const newAlertas = [];
+    
+    // Alertas de estoque crítico (quantidade <= 5)
+    const criticos = items.filter(i => i.quantity <= 5 && i.quantity > 0);
+    criticos.forEach(item => {
+      newAlertas.push({
+        id: `critico-${item.id}`,
+        type: 'urgente',
+        title: `Estoque Crítico: ${item.name}`,
+        message: `Quantidade abaixo do mínimo (${item.quantity} unidades restantes)`,
+        icon: AlertTriangle,
+        color: 'red',
+      });
+    });
+
+    // Alertas de estoque zerado
+    const zerados = items.filter(i => i.quantity === 0);
+    zerados.forEach(item => {
+      newAlertas.push({
+        id: `zerado-${item.id}`,
+        type: 'urgente',
+        title: `Estoque Zerado: ${item.name}`,
+        message: 'Item sem estoque! Necessária reposição urgente',
+        icon: AlertTriangle,
+        color: 'red',
+      });
+    });
+
+    // Alertas de estoque baixo (quantidade <= 20)
+    const baixos = items.filter(i => i.quantity > 5 && i.quantity <= 20);
+    baixos.forEach(item => {
+      newAlertas.push({
+        id: `baixo-${item.id}`,
+        type: 'aviso',
+        title: `Estoque Baixo: ${item.name}`,
+        message: `Reposição recomendada (${item.quantity} unidades restantes)`,
+        icon: AlertCircle,
+        color: 'yellow',
+      });
+    });
+
+    // Alerta informativo se não houver alertas
+    if (newAlertas.length === 0 && items.length > 0) {
+      newAlertas.push({
+        id: 'info-ok',
+        type: 'info',
+        title: 'Sistema Operando Normal',
+        message: 'Nenhum alerta de estoque no momento',
+        icon: Info,
+        color: 'blue',
+      });
+    }
+
+    setAlertas(newAlertas);
+  };
+
   return (
     <div className="space-y-6">
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Bell className="w-5 h-5" />
-            Alertas do Sistema
+            Alertas do Sistema ({alertas.length})
           </CardTitle>
         </CardHeader>
         <CardContent>

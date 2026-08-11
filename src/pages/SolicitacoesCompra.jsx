@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,13 +10,35 @@ export function SolicitacoesCompra() {
   const [quantity, setQuantity] = useState('');
   const [priority, setPriority] = useState('normal');
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('✅ Solicitação de compra criada com sucesso!');
-    setItemName('');
-    setQuantity('');
-    setTimeout(() => setMessage(''), 3000);
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('purchase_requests')
+        .insert([{
+          item_name: itemName,
+          requested_quantity: parseInt(quantity),
+          priority: priority,
+          status: 'pendente',
+          created_at: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+
+      setMessage('✅ Solicitação de compra criada com sucesso!');
+      setItemName('');
+      setQuantity('');
+      setPriority('normal');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setMessage(`❌ Erro: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -66,13 +89,21 @@ export function SolicitacoesCompra() {
               </select>
             </div>
             {message && (
-              <div className="p-3 rounded-md bg-green-900 text-green-300 border border-green-700 text-sm">
+              <div className={`p-3 rounded-md text-sm ${
+                message.includes('✅')
+                  ? 'bg-green-900 text-green-300 border border-green-700'
+                  : 'bg-red-900 text-red-300 border border-red-700'
+              }`}>
                 {message}
               </div>
             )}
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white w-full">
-              <Plus className="w-4 h-4 mr-2" />
-              Criar Solicitação
+            <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white w-full" disabled={isLoading}>
+              {isLoading ? 'Processando...' : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Criar Solicitação
+                </>
+              )}
             </Button>
           </form>
         </CardContent>
