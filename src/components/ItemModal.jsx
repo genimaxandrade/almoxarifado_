@@ -12,6 +12,8 @@ export function ItemModal({ isOpen, onOpenChange, onSave, editingItem, isLoading
     quantity: 0,
     ca: '',
     patrimonio: '',
+    data_validade_ca: '',
+    estoque_minimo: 10,
   });
   const [error, setError] = useState('');
 
@@ -25,6 +27,8 @@ export function ItemModal({ isOpen, onOpenChange, onSave, editingItem, isLoading
         quantity: editingItem.quantity || 0,
         ca: editingItem.ca || '',
         patrimonio: editingItem.patrimonio || '',
+        data_validade_ca: editingItem.data_validade_ca || '',
+        estoque_minimo: editingItem.estoque_minimo || 10,
       });
     } else {
       setFormData({
@@ -35,6 +39,8 @@ export function ItemModal({ isOpen, onOpenChange, onSave, editingItem, isLoading
         quantity: 0,
         ca: '',
         patrimonio: '',
+        data_validade_ca: '',
+        estoque_minimo: 10,
       });
     }
     setError('');
@@ -137,6 +143,39 @@ export function ItemModal({ isOpen, onOpenChange, onSave, editingItem, isLoading
               </p>
             </div>
           )}
+
+          {/* Campo Data de Validade do CA - para EPIs */}
+          {formData.type === 'epi' && (
+            <div>
+              <label className="text-sm font-medium text-yellow-400">
+                Data de Validade do CA
+              </label>
+              <Input
+                type="date"
+                value={formData.data_validade_ca}
+                onChange={(e) => setFormData({ ...formData, data_validade_ca: e.target.value })}
+                className="bg-gray-700 border-yellow-600 text-white"
+              />
+              <p className="text-xs text-yellow-500 mt-1">
+                O sistema alertará quando o CA estiver próximo do vencimento
+              </p>
+            </div>
+          )}
+
+          {/* Campo Estoque Mínimo */}
+          <div>
+            <label className="text-sm font-medium text-gray-300">Estoque Mínimo</label>
+            <Input
+              type="number"
+              value={formData.estoque_minimo}
+              onChange={(e) => setFormData({ ...formData, estoque_minimo: parseInt(e.target.value) || 0 })}
+              placeholder="10"
+              className="bg-gray-700 border-gray-600 text-white"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Sistema alertará quando a quantidade atingir este valor
+            </p>
+          </div>
 
           <div>
             <label className="text-sm font-medium text-gray-300">Unidade</label>
