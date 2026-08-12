@@ -32,6 +32,8 @@ function App() {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
+  const [showReset, setShowReset] = useState(false);
   const [items, setItems] = useState([]);
   const [userName, setUserName] = useState('');
   const [currentPage, setCurrentPage] = useState('controle');
@@ -117,6 +119,26 @@ function App() {
       }
     } catch (err) {
       setError(err.message || 'Erro ao fazer login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail || email, {
+        redirectTo: window.location.origin,
+      });
+      if (error) throw error;
+      setError('✅ Link de redefinição de senha enviado! Verifique sua caixa de entrada (e a pasta de spam).');
+      setShowReset(false);
+      setResetEmail('');
+    } catch (err) {
+      setError(err.message || 'Erro ao enviar link de redefinição');
     } finally {
       setLoading(false);
     }
@@ -286,7 +308,7 @@ function App() {
               </div>
               {error && (
                 <div className={`p-3 rounded-md text-sm ${
-                  error.includes('Verifique') 
+                  error.includes('✅') || error.includes('Verifique') 
                     ? 'bg-green-900 text-green-300 border border-green-700' 
                     : 'bg-red-900 text-red-300 border border-red-700'
                 }`}>
@@ -311,6 +333,55 @@ function App() {
               >
                 {isSignUp ? 'Já tem conta? Entrar' : 'Não tem conta? Criar'}
               </Button>
+              {!isSignUp && !showReset && (
+                <button
+                  type="button"
+                  className="w-full text-sm text-blue-400 hover:text-blue-300 underline"
+                  onClick={() => {
+                    setShowReset(true);
+                    setError('');
+                  }}
+                >
+                  Esqueci minha senha
+                </button>
+              )}
+              {!isSignUp && showReset && (
+                <>
+                  <button
+                    type="button"
+                    className="w-full text-sm text-gray-400 hover:text-gray-300"
+                    onClick={() => {
+                      setShowReset(false);
+                      setResetEmail('');
+                    }}
+                  >
+                    ← Voltar para o login
+                  </button>
+                  <div className="border-t border-gray-700 pt-3">
+                    <label className="text-sm font-medium text-gray-300">
+                      Email cadastrado
+                    </label>
+                    <Input
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Se não preencher, será usado o email do campo acima.
+                    </p>
+                    <Button
+                      type="button"
+                      className="w-full mt-2 bg-yellow-600 hover:bg-yellow-700 text-white"
+                      disabled={loading}
+                      onClick={handleResetPassword}
+                    >
+                      {loading ? 'Enviando...' : 'Enviar link de redefinição'}
+                    </Button>
+                  </div>
+                </>
+              )}
             </form>
           </CardContent>
         </Card>
