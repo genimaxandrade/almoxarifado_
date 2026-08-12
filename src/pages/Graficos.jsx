@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 export function Graficos() {
-  const [distribuicao, setDistribuicao] = useState([]);
-  const [movimentacoes, setMovimentacoes] = useState([]);
+  const [topConsumidos, setTopConsumidos] = useState([]);
+  const [tendenciaMensal, setTendenciaMensal] = useState([]);
+  const [saidasDiarias, setSaidasDiarias] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -13,109 +14,135 @@ export function Graficos() {
 
   const loadData = async () => {
     try {
-      // Distribuição por tipo
-      const { data: items } = await supabase
-        .from('items')
-        .select('type, quantity');
+      // Buscar apenas saídas dos últimos 90 dias
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-      if (items && items.length > 0) {
-        const tipos = {};
-        items.forEach(item => {
-          const tipo = item.type || 'Outros';
-          tipos[tipo] = (tipos[tipo] || 0) + item.quantity;
-        });
+      const { data: movements } = await supabase
+        .from('stock_movements')
+        .select('*')
+        .eq('movement_type', 'saida')
+        .gte('date', ninetyDaysAgo.toISOString().split('T')[0]);
 
-        setDistribuicao(
-          Object.entries(tipos).map(([name, value]) => ({ name, value }))
-        );
-      }
+      if (!movements || movements.length === 0) return;
 
-      // Movimentações por dia (últimos 7 dias)
-      const today = new Date();
+      // Top 10 mais consumidos
+      const consumo = {};
+      movements.forEach(m => {
+        const name = m.item_name || m.item_code || 'Desconhecido';
+        consumo[name] = (consumo[name] || 0) + m.quantity;
+      });
+
+      const sorted = Object.entries(consumo)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10);
+
+      setTopConsumidos(
+        sorted.map(([name, value]) => ({ name: name.length > 25 ? name.substring(0, 25) + '...' : name, total: value }))
+      );
+
+      // Tendência mensal (últimos 6 meses)
+      const monthly = {};
+      movements.forEach(m => {
+        const monthKey = m.date.substring(0, 7); // YYYY-MM
+        monthly[monthKey] = (monthly[monthKey] || 0) + m.quantity;
+      });
+
+      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      setTendenciaMensal(
+        Object.entries(monthly)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .slice(-6)
+          .map(([key, value]) => ({
+            mes: monthNames[parseInt(key.split('-')[1]) - 1] + '/' + key.split('-')[0].slice(2),
+            saidas: value
+          }))
+      );
+
+      // Saídas diárias últimos 14 dias
       const days = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(today);
+      for (let i = 13; i >= 0; i--) {
+        const date = new Date();
         date.setDate(date.getDate() - i);
         days.push(date.toISOString().split('T')[0]);
       }
 
-      const { data: movements } = await supabase
-        .from('stock_movements')
-        .select('date, movement_type')
-        .gte('date', days[0]);
-
-      if (movements) {
-        const dailyStats = days.map(day => {
-          const dayMovs = movements.filter(m => m.date.startsWith(day));
-          return {
-            dia: new Date(day).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-            entradas: dayMovs.filter(m => m.movement_type === 'entrada').length,
-            saidas: dayMovs.filter(m => m.movement_type === 'saida').length,
-          };
-        });
-        setMovimentacoes(dailyStats);
-      }
+      const dailyData = days.map(day => {
+        const dayMovs = movements.filter(m => m.date.startsWith(day));
+        return {
+          dia: new Date(day + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+          saidas: dayMovs.reduce((acc, m) => acc + m.quantity, 0)
+        };
+      });
+      setSaidasDiarias(dailyData);
     } catch (err) {
       console.error('Erro ao carregar dados dos gráficos:', err);
     }
   };
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
-
   return (
     <div className="space-y-6">
+      {/* Top 10 Mais Consumidos */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-white">Distribuição de Estoque por Tipo</CardTitle>
+          <CardTitle className="text-white">Top 10 Itens Mais Consumidos (Saídas)</CardTitle>
         </CardHeader>
         <CardContent>
-          {distribuicao.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Nenhum dado disponível.
-            </div>
+          {topConsumidos.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">Nenhuma saída registrada.</div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={distribuicao}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {distribuicao.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={topConsumidos} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis type="number" stroke="#9CA3AF" />
+                <YAxis type="category" dataKey="name" stroke="#9CA3AF" width={200} />
                 <Tooltip />
-                <Legend />
-              </PieChart>
+                <Bar dataKey="total" fill="#EF4444" name="Qtd Saída" />
+              </BarChart>
             </ResponsiveContainer>
           )}
         </CardContent>
       </Card>
 
+      {/* Tendência Mensal */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-white">Movimentações - Últimos 7 Dias</CardTitle>
+          <CardTitle className="text-white">Tendência Mensal de Saídas</CardTitle>
         </CardHeader>
         <CardContent>
-          {movimentacoes.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Nenhum dado disponível.
-            </div>
+          {tendenciaMensal.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">Nenhum dado disponível.</div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={movimentacoes}>
+              <LineChart data={tendenciaMensal}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="mes" stroke="#9CA3AF" />
+                <YAxis stroke="#9CA3AF" />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="saidas" stroke="#3B82F6" strokeWidth={2} name="Saídas" />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Saídas Diárias */}
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white">Saídas - Últimos 14 Dias</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {saidasDiarias.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">Nenhum dado disponível.</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={saidasDiarias}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="dia" stroke="#9CA3AF" />
                 <YAxis stroke="#9CA3AF" />
                 <Tooltip />
-                <Legend />
-                <Bar dataKey="entradas" fill="#10B981" name="Entradas" />
-                <Bar dataKey="saidas" fill="#EF4444" name="Saídas" />
+                <Bar dataKey="saidas" fill="#F59E0B" name="Saídas (Qtd)" />
               </BarChart>
             </ResponsiveContainer>
           )}

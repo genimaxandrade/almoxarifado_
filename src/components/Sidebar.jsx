@@ -24,7 +24,7 @@ import {
 
 const menuStructure = [
   {
-    section: 'MÓDULO OPERACIONAL',
+    section: 'ESTOQUE',
     items: [
       { id: 'controle', label: 'Controle de Estoque', icon: Package, description: 'Gerenciar itens do estoque' },
       { id: 'saida', label: 'Saída de Material', icon: ArrowDown, description: 'Registrar retirada de itens' },
@@ -34,7 +34,7 @@ const menuStructure = [
     ],
   },
   {
-    section: 'MÓDULO DE RELATÓRIOS',
+    section: 'RELATÓRIOS',
     items: [
       { id: 'historico_diario', label: 'Histórico Diário', icon: Calendar, description: 'Movimentações do dia' },
       { id: 'relatorio_mensal', label: 'Relatório Mensal', icon: FileBarChart, description: 'Consolidação mensal' },
@@ -44,7 +44,7 @@ const menuStructure = [
     ],
   },
   {
-    section: 'MÓDULO DE CONFIGURAÇÕES',
+    section: 'CONFIGURAÇÕES',
     items: [
       { id: 'funcionarios', label: 'Funcionários', icon: Users, description: 'CRUD de usuários', adminOnly: true },
       { id: 'permissoes', label: 'Permissões', icon: ShieldAlert, description: 'Gerenciar permissões', adminOnly: true },

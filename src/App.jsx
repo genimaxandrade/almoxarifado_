@@ -39,6 +39,9 @@ function App() {
   const [editingItem, setEditingItem] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [importError, setImportError] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [filterLocation, setFilterLocation] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Permissões
   const { userRole } = usePermissions(user);
@@ -195,6 +198,14 @@ function App() {
   const handleNavigate = (pageId) => {
     setCurrentPage(pageId);
   };
+
+  // Filtros
+  const filteredItems = items.filter(item => {
+    if (filterType && item.type !== filterType) return false;
+    if (filterLocation && item.localizacao?.toLowerCase() !== filterLocation.toLowerCase()) return false;
+    if (searchTerm && !item.name.toLowerCase().includes(searchTerm.toLowerCase()) && !item.code.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    return true;
+  });
 
   // Renderizar página atual
   const renderPage = () => {
@@ -383,6 +394,43 @@ function App() {
                   </div>
                 </CardHeader>
                 <CardContent>
+                  {/* Filtros */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                    <Input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="🔍 Buscar nome ou código..."
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
+                    />
+                    <select
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white rounded-md p-2"
+                    >
+                      <option value="">Todos os Tipos</option>
+                      <option value="epi">EPI</option>
+                      <option value="ferramenta">Ferramenta</option>
+                      <option value="equipamento">Equipamento</option>
+                      <option value="material_consumo">Material de Consumo</option>
+                      <option value="material_limpeza">Material de Limpeza</option>
+                      <option value="gas">Gás</option>
+                      <option value="material">Material</option>
+                    </select>
+                    <Input
+                      value={filterLocation}
+                      onChange={(e) => setFilterLocation(e.target.value)}
+                      placeholder="📍 Filtrar por localização..."
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => { setFilterType(''); setFilterLocation(''); setSearchTerm(''); }}
+                      className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                    >
+                      Limpar Filtros
+                    </Button>
+                  </div>
+
                   {importError && (
                     <div className={`p-3 rounded-md text-sm mb-4 ${
                       importError.includes('✅')
@@ -397,12 +445,15 @@ function App() {
                       {error}
                     </div>
                   )}
-                  {items.length === 0 ? (
+                  {filteredItems.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
-                      Nenhum item encontrado. Crie o primeiro item!
+                      {items.length === 0 
+                        ? 'Nenhum item encontrado. Crie o primeiro item!' 
+                        : 'Nenhum item corresponde aos filtros selecionados.'}
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
+                      <p className="text-gray-400 text-sm mb-2">Mostrando {filteredItems.length} de {items.length} itens</p>
                       <table className="w-full">
                         <thead className="bg-gray-700 border-b border-gray-600">
                           <tr>
@@ -411,13 +462,16 @@ function App() {
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Tipo</th>
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">CA</th>
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Patrimônio</th>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">Localização</th>
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Unidade</th>
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Quantidade</th>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">Preço Unit.</th>
+                            <th className="px-4 py-3 text-left text-gray-300 font-semibold">Fornecedor</th>
                             <th className="px-4 py-3 text-left text-gray-300 font-semibold">Ações</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {items.map((item, index) => (
+                          {filteredItems.map((item, index) => (
                             <tr 
                               key={item.id} 
                               className={`border-t border-gray-700 hover:bg-gray-700 transition ${
@@ -432,17 +486,32 @@ function App() {
                                     ? 'bg-orange-900/50 text-orange-300' 
                                     : item.type === 'ferramenta' 
                                     ? 'bg-blue-900/50 text-blue-300' 
+                                    : item.type === 'equipamento' 
+                                    ? 'bg-purple-900/50 text-purple-300'
+                                    : item.type === 'material_consumo' 
+                                    ? 'bg-green-900/50 text-green-300'
+                                    : item.type === 'material_limpeza' 
+                                    ? 'bg-teal-900/50 text-teal-300'
+                                    : item.type === 'gas' 
+                                    ? 'bg-yellow-900/50 text-yellow-300'
                                     : 'bg-gray-700 text-gray-400'
                                 }`}>
-                                  {item.type === 'epi' ? 'EPI' : item.type === 'ferramenta' ? 'Ferramenta' : 'Material'}
+                                  {item.type === 'epi' ? 'EPI' 
+                                   : item.type === 'ferramenta' ? 'Ferramenta'
+                                   : item.type === 'equipamento' ? 'Equipamento'
+                                   : item.type === 'material_consumo' ? 'Mat. Consumo'
+                                   : item.type === 'material_limpeza' ? 'Mat. Limpeza'
+                                   : item.type === 'gas' ? 'Gás'
+                                   : 'Material'}
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-gray-400 text-sm">{item.ca || '-'}</td>
                               <td className="px-4 py-3 text-gray-400 text-sm">{item.patrimonio || '-'}</td>
+                              <td className="px-4 py-3 text-gray-400 text-sm">{item.localizacao || '-'}</td>
                               <td className="px-4 py-3 text-gray-400">{item.unit}</td>
                               <td className="px-4 py-3">
                                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                                  item.quantity > 10 
+                                  item.quantity > (item.estoque_seguranca || 0) 
                                     ? 'bg-green-900 text-green-300' 
                                     : item.quantity > 0 
                                     ? 'bg-yellow-900 text-yellow-300' 
@@ -451,6 +520,8 @@ function App() {
                                   {item.quantity}
                                 </span>
                               </td>
+                              <td className="px-4 py-3 text-gray-400 text-sm">R$ {(item.preco_unitario || 0).toFixed(2)}</td>
+                              <td className="px-4 py-3 text-gray-400 text-sm">{item.fornecedor || '-'}</td>
                               <td className="px-4 py-3 space-x-2">
                                 <Button
                                   size="sm"

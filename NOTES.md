@@ -1,45 +1,58 @@
-# Notas do Projeto Almoxarifado
+# Notas do Projeto - Almoxarifado
 
-## Configurações Supabase
-- URL: https://ephxzzwgoasgqygqrcru.supabase.co
-- SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwaHh6endnb2FzZ3F5Z3FyY3J1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjMzNzE1OCwiZXhwIjoyMTAxOTEzMTU4fQ.qRnNFoaTSe85_BzcTaCHFDNpJJzsznPVVV5UDYfcLsY
-- ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwaHh6endnb2FzZ3F5Z3FyY3J1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjMzNzE1OCwiZXhwIjoyMTAxOTEzMTU4fQ.l5myU4gg6RwInesv0qqZTqiUusoqaVQm2FOZC0gtpvA
+## Estado Atual
+- Projeto: almoxarifado_ (genimaxandrade)
+- Deploy: https://almoxarifado-delta.vercel.app
+- Branch: main
+- Git session: git_push (cd ~/almoxarifado_)
 
-## Tabelas do Supabase
-- items: id, code, name, type, unit, quantity, ca, patrimonio, data_validade_ca, estoque_minimo, created_at
-- employees: id, name, email, position, access_level, created_at
-- stock_movements: id, item_id, item_code, item_name, movement_type, quantity, reason, date, created_at
-- purchase_requests: id, item_id, item_code, item_name, requested_quantity, status, created_at
-- user_permissions: id, user_email, access_level, created_at
-- item_signatures: id, item_id, item_name, item_type, employee_name, employee_department, signature_name, term_accepted, signed_at, created_at
-
-## URL do Vercel
-https://almoxarifado-delta.vercel.app
-
-## Estrutura do Projeto
-- React + Vite + Tailwind CSS
-- Supabase para banco de dados
-- Lucide-react para ícones
-
-## Localização do Bloqueio de Funcionários
-- Sidebar.jsx, linha 48: `adminOnly: false` (foi desbloqueado)
-- Sidebar.jsx, linha 88-93: `handleNavigation` verifica `isAdminOnly && userRole !== 'admin'`
-- Sidebar.jsx, linha 132: `isDisabled = isAdminOnly && userRole !== 'admin'`
-
-## Estado Atual (Atualizado)
-- Funcionários desbloqueado (adminOnly: false)
-- Importação/Exportação de funcionários via Excel: src/utils/employeeExcelUtils.js
-- Campo data_vencimento_ca removido de Funcionários (mantido apenas em items/Controle de Estoque)
-- Painel de Gerenciamento de Permissões: src/pages/GerenciamentoPermissoes.jsx (recebe prop currentUser)
-- usePermissions hook: src/hooks/usePermissions.js (userRole, isAdmin, canAccess, loading)
-
-## Colunas da tabela employees
-- id, name, email, position, department, access_level, created_at
-- (data_vencimento_ca foi removido do código de Funcionários)
-
-## Colunas da tabela items
+## Colunas da tabela items (atualizado)
 - id, code, name, type, unit, quantity, ca, patrimonio, data_validade_ca, estoque_minimo, created_at
+- localizacao, fornecedor, preco_unitario, data_validade, estoque_seguranca
 
-## Pendências para corrigir
-1. Integrar GerenciamentoPermissoes no App.jsx
-2. Restaurar adminOnly: true nos itens protegidos da Sidebar (funcionarios deve voltar a ser adminOnly)
+## Tipos de itens (novo)
+- epi, equipamento, material_consumo, material_limpeza, gas, ferramenta
+
+## Solicitações de compra
+- Tabela purchase_requests com campos: item_id, item_code, item_name, requested_quantity, status, created_at
+- Novo fluxo: pendente → aprovado → comprado → cancelado
+- Expiração automática em 30 dias
+
+## Saída de Material (novo requisito)
+- Múltiplos itens para o mesmo requisitante (lista/carrinho)
+- Área de utilização obrigatória para gases
+- Folha de assinatura imprimível
+- Gera solicitação de compra quando atinge estoque mínimo
+- Alerta visual ao atingir estoque de segurança
+
+## Reposição (novo requisito)
+- Nota fiscal, pedido de compra, fornecedor, valor unitário (histórico de preço)
+
+## Gráficos (novo requisito)
+- Apenas saídas
+- Ranking 10 itens mais consumidos
+- Tendência mensal de movimentações
+
+## Sidebar (novo requisito)
+- 📦 Estoque: Controle de Estoque (/), Saída de Material (/saida), Reposição (/reposicao)
+- 📊 Relatórios: Estatísticas, Histórico de Preços, Gráficos, Histórico Diário, Relatório Mensal
+- ⚙️ Configurações: Alertas, Etiquetas, Funcionários, Solicitações de Compra, Backup, Gerenciar Acessos, Ajuda
+
+## Gerenciar Acessos (novo)
+- Substitui "Permissões"
+- Tipos: somente_visualizacao, visualizacao_edicao, acesso_restrito
+
+## Credenciais
+- Supabase URL: https://ephxzzwgoasgqygqrcru.supabase.co
+- User Admin: genimaxandrademax@gmail.com (já configurado como admin)
+
+## Pendências
+1. ✅ ItemModal atualizado
+2. ⬜ SaidaMaterial - múltiplos itens, folha assinatura, gases obrigatório
+3. ⬜ ReposicaoEstoque - nota fiscal, fornecedor, preço unitário
+4. ⬜ App.jsx tabela controle de estoque - novos campos e filtros
+5. ⬜ SolicitacoesCompra - fluxo de status, expiração 30 dias
+6. ⬜ Graficos - apenas saídas, ranking 10
+7. ⬜ Sidebar - reorganizar menu
+8. ⬜ GerenciamentoPermissoes → Gerenciar Acessos
+9. ⬜ Commit + Push
