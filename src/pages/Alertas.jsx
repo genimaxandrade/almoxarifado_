@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, AlertTriangle, AlertCircle, Info, CalendarWarning, ShieldAlert } from 'lucide-react';
+import { Bell, AlertTriangle, AlertCircle, Info, CalendarClock, ShieldAlert } from 'lucide-react';
 
 export function Alertas({ items }) {
   const [alertas, setAlertas] = useState([]);
@@ -76,7 +76,7 @@ export function Alertas({ items }) {
         type: 'aviso',
         title: `⏰ CA Próximo do Vencimento: ${item.name}`,
         message: `CA nº ${item.ca} vence em ${formatDate(item.data_validade_ca)} (${diasRestantes} dias). Planeje a substituição!`,
-        icon: CalendarWarning,
+        icon: CalendarClock,
         color: 'yellow',
       });
     });
@@ -94,7 +94,7 @@ export function Alertas({ items }) {
         type: 'info',
         title: `📅 CA Vence em Breve: ${item.name}`,
         message: `CA nº ${item.ca} vence em ${formatDate(item.data_validade_ca)}. Inicie o planejamento de substituição.`,
-        icon: CalendarWarning,
+        icon: CalendarClock,
         color: 'blue',
       });
     });
