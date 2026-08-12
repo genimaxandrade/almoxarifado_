@@ -90,11 +90,20 @@ export function ItemModal({ isOpen, onOpenChange, onSave, editingItem, isLoading
     // Calcular estoque de segurança (mínimo × 1,2)
     const estoqueSeguranca = (formData.estoque_minimo || 10) * 1.2;
 
-    onSave({
+    // Normalizar strings vazias para null (colunas DATE do Postgres não aceitam "")
+    const normalizedData = {
       ...formData,
       estoque_seguranca: estoqueSeguranca,
       preco_unitario: parseFloat(formData.preco_unitario) || 0,
-    });
+      ca: formData.ca || null,
+      patrimonio: formData.patrimonio || null,
+      data_validade_ca: formData.data_validade_ca || null,
+      data_validade: formData.data_validade || null,
+      localizacao: formData.localizacao || null,
+      fornecedor: formData.fornecedor || null,
+    };
+
+    onSave(normalizedData);
   };
 
   return (
