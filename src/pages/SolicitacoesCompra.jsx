@@ -209,6 +209,7 @@ export function SolicitacoesCompra() {
                   <option value="normal">Normal</option>
                   <option value="alta">Alta</option>
                   <option value="urgente">Urgente</option>
+                  <option value="emergencial">Emergencial</option>
                 </select>
               </div>
               <div className="flex items-end">
@@ -263,6 +264,7 @@ export function SolicitacoesCompra() {
                         </span>
                         {req.priority !== 'normal' && (
                           <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            req.priority === 'emergencial' ? 'bg-red-900 text-red-200 ring-1 ring-red-500' :
                             req.priority === 'urgente' ? 'bg-red-900 text-red-300' :
                             req.priority === 'alta' ? 'bg-orange-900 text-orange-300' :
                             'bg-gray-600 text-gray-400'
