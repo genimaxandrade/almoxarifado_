@@ -9,7 +9,6 @@ export function exportEmployeesToExcel(funcionarios) {
     'Email': f.email || '',
     'Cargo': f.position || f.cargo || '',
     'Departamento': f.department || f.departamento || '',
-    'Permissão': f.access_level === 'admin' ? 'Administrador' : 'Usuário',
   }));
 
   const ws = XLSX.utils.json_to_sheet(data);
@@ -64,15 +63,13 @@ export async function importEmployeesFromExcel(file) {
 
           return {
             name: name.trim(),
-            email: email.trim(),
             position: cargo.trim(),
             department: departamento.trim(),
-            access_level: accessLevel,
           };
-        }).filter(item => item.name && item.email);
+        }).filter(item => item.name);
 
         if (mappedData.length === 0) {
-          reject(new Error('Nenhum funcionário válido encontrado no arquivo. Verifique se as colunas "Nome" e "Email" existem.'));
+          reject(new Error('Nenhum funcionário válido encontrado no arquivo. Verifique se a coluna "Nome" existe.'));
           return;
         }
 

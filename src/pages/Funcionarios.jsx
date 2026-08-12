@@ -49,10 +49,8 @@ export function Funcionarios() {
     try {
       const insertData = {
         name: formData.nome,
-        email: formData.email,
         position: formData.cargo,
         department: formData.departamento,
-        access_level: formData.permissao,
       };
 
       if (editingFunc) {
@@ -234,16 +232,12 @@ export function Funcionarios() {
                   {funcionarios.map((func) => (
                     <tr key={func.id} className="border-b border-gray-700 hover:bg-gray-700/30">
                       <td className="py-3 px-2 text-white text-sm font-medium">{func.name}</td>
-                      <td className="py-3 px-2 text-gray-400 text-sm">{func.email}</td>
+                      <td className="py-3 px-2 text-gray-400 text-sm">{func.email || '-'}</td>
                       <td className="py-3 px-2 text-gray-400 text-sm">{func.position || 'N/A'}</td>
                       <td className="py-3 px-2 text-gray-400 text-sm">{func.department || 'N/A'}</td>
                       <td className="py-3 px-2">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          func.access_level === 'admin'
-                            ? 'bg-purple-900 text-purple-300'
-                            : 'bg-blue-900 text-blue-300'
-                        }`}>
-                          {func.access_level === 'admin' ? 'Admin' : 'Usuário'}
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-900 text-blue-300">
+                          Usuário
                         </span>
                       </td>
                       <td className="py-3 px-2 space-x-2">
@@ -257,7 +251,7 @@ export function Funcionarios() {
                               email: func.email || '',
                               cargo: func.position || '',
                               departamento: func.department || '',
-                              permissao: func.access_level || 'user',
+                              permissao: 'user',
                             });
                             setIsModalOpen(true);
                           }}
@@ -301,12 +295,11 @@ export function Funcionarios() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-300 mb-2 block">Email *</label>
+                <label className="text-sm font-medium text-gray-300 mb-2 block">Email (opcional)</label>
                 <Input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
                   placeholder="email@empresa.com"
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                 />
