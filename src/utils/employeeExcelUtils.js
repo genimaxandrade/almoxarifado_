@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 export function exportEmployeesToExcel(funcionarios) {
   const data = funcionarios.map(f => ({
     'Nome': f.name || f.nome || '',
+    'Matrícula': f.matricula || f.matriculo || '',
     'Email': f.email || '',
     'Cargo': f.position || f.cargo || '',
     'Departamento': f.department || f.departamento || '',
@@ -18,6 +19,7 @@ export function exportEmployeesToExcel(funcionarios) {
   // Ajustar largura das colunas
   const colWidths = [
     { wch: 30 }, // Nome
+    { wch: 15 }, // Matrícula
     { wch: 35 }, // Email
     { wch: 25 }, // Cargo
     { wch: 25 }, // Departamento
@@ -50,6 +52,7 @@ export async function importEmployeesFromExcel(file) {
         // Mapear colunas com flexibilidade (aceita variações de nomes)
         const mappedData = jsonData.map(row => {
           const name = row['Nome'] || row['nome'] || row['NAME'] || '';
+          const matricula = row['Matrícula'] || row['Matricula'] || row['MATRÍCULA'] || row['matricula'] || row['MATRICULA'] || '';
           const email = row['Email'] || row['email'] || row['EMAIL'] || row['E-mail'] || '';
           const cargo = row['Cargo'] || row['cargo'] || row['CARGO'] || row['Position'] || '';
           const departamento = row['Departamento'] || row['departamento'] || row['DEPARTAMENTO'] || row['Setor'] || row['setor'] || '';
@@ -63,6 +66,7 @@ export async function importEmployeesFromExcel(file) {
 
           return {
             name: name.trim(),
+            matricula: matricula.toString().trim() || null,
             position: cargo.trim(),
             department: departamento.trim(),
           };
@@ -90,6 +94,7 @@ export function downloadEmployeeTemplate() {
   const template = [
     {
       'Nome': 'João Silva',
+      'Matrícula': '123456',
       'Email': 'joao.silva@empresa.com',
       'Cargo': 'Operador de Máquinas',
       'Departamento': 'Produção',
@@ -97,6 +102,7 @@ export function downloadEmployeeTemplate() {
     },
     {
       'Nome': 'Maria Santos',
+      'Matrícula': '789012',
       'Email': 'maria.santos@empresa.com',
       'Cargo': 'Supervisora',
       'Departamento': 'Manutenção',
@@ -104,6 +110,7 @@ export function downloadEmployeeTemplate() {
     },
     {
       'Nome': 'Carlos Oliveira',
+      'Matrícula': '345678',
       'Email': 'carlos.oliveira@empresa.com',
       'Cargo': 'Técnico de Segurança',
       'Departamento': 'Segurança do Trabalho',
@@ -117,6 +124,7 @@ export function downloadEmployeeTemplate() {
 
   const colWidths = [
     { wch: 25 }, // Nome
+    { wch: 15 }, // Matrícula
     { wch: 30 }, // Email
     { wch: 22 }, // Cargo
     { wch: 22 }, // Departamento

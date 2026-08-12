@@ -17,6 +17,7 @@ export function Funcionarios() {
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
+    matricula: '',
     cargo: '',
     departamento: '',
     permissao: 'user',
@@ -49,6 +50,7 @@ export function Funcionarios() {
     try {
       const insertData = {
         name: formData.nome,
+        matricula: formData.matricula || null,
         position: formData.cargo,
         department: formData.departamento,
       };
@@ -73,6 +75,7 @@ export function Funcionarios() {
       setFormData({
         nome: '',
         email: '',
+        matricula: '',
         cargo: '',
         departamento: '',
         permissao: 'user',
@@ -148,6 +151,7 @@ export function Funcionarios() {
                   setFormData({
                     nome: '',
                     email: '',
+                    matricula: '',
                     cargo: '',
                     departamento: '',
                     permissao: 'user',
@@ -221,6 +225,7 @@ export function Funcionarios() {
                 <thead>
                   <tr className="border-b border-gray-700">
                     <th className="text-left text-gray-400 font-medium py-3 px-2 text-sm">Nome</th>
+                    <th className="text-left text-gray-400 font-medium py-3 px-2 text-sm">Matrícula</th>
                     <th className="text-left text-gray-400 font-medium py-3 px-2 text-sm">Email</th>
                     <th className="text-left text-gray-400 font-medium py-3 px-2 text-sm">Cargo</th>
                     <th className="text-left text-gray-400 font-medium py-3 px-2 text-sm">Departamento</th>
@@ -232,6 +237,7 @@ export function Funcionarios() {
                   {funcionarios.map((func) => (
                     <tr key={func.id} className="border-b border-gray-700 hover:bg-gray-700/30">
                       <td className="py-3 px-2 text-white text-sm font-medium">{func.name}</td>
+                      <td className="py-3 px-2 text-gray-400 text-sm">{func.matricula || '-'}</td>
                       <td className="py-3 px-2 text-gray-400 text-sm">{func.email || '-'}</td>
                       <td className="py-3 px-2 text-gray-400 text-sm">{func.position || 'N/A'}</td>
                       <td className="py-3 px-2 text-gray-400 text-sm">{func.department || 'N/A'}</td>
@@ -249,6 +255,7 @@ export function Funcionarios() {
                             setFormData({
                               nome: func.name || '',
                               email: func.email || '',
+                              matricula: func.matricula || '',
                               cargo: func.position || '',
                               departamento: func.department || '',
                               permissao: 'user',
@@ -291,6 +298,15 @@ export function Funcionarios() {
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                   required
                   placeholder="Nome completo"
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300 mb-2 block">Matrícula (opcional)</label>
+                <Input
+                  value={formData.matricula}
+                  onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
+                  placeholder="Ex: 123456"
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                 />
               </div>
