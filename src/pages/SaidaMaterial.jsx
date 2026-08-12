@@ -107,8 +107,7 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
             item_name: item.name,
             movement_type: 'saida',
             quantity: saida.quantity,
-            reason: `Requisitante: ${employeeName} - ${employeeDepartment ? `Setor: ${employeeDepartment}` : ''}`,
-            area_uso: saida.areaUso || null,
+            reason: `Requisitante: ${employeeName} - ${employeeDepartment ? `Setor: ${employeeDepartment}` : ''}${saida.areaUso ? ` - Área de Uso: ${saida.areaUso}` : ''}`,
             date: now
           }]);
         if (movError) throw movError;
