@@ -34,6 +34,9 @@ function App() {
   const [error, setError] = useState('');
   const [resetEmail, setResetEmail] = useState('');
   const [showReset, setShowReset] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [items, setItems] = useState([]);
   const [userName, setUserName] = useState('');
   const [currentPage, setCurrentPage] = useState('controle');
@@ -47,6 +50,23 @@ function App() {
 
   // Permissões
   const { userRole } = usePermissions(user);
+
+  // Detectar link de redefinição de senha vindo do email
+  useEffect(() => {
+    const hash = window.location.hash;
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error') || urlParams.get('error_description');
+    if (hash.includes('access_token=') && !hash.includes('error=')) {
+      setShowNewPassword(true);
+      // Detectar token de erro no hash também
+      const hashError = urlParams.get('error');
+      if (hashError) {
+        setError('Link de redefinição inválido ou expirado. Solicite um novo link.');
+      }
+    } else if (hash.includes('error=')) {
+      setError('Link de redefinição inválido ou expirado. Solicite um novo link.');
+    }
+  }, []);
 
   useEffect(() => {
     checkUser();
@@ -139,6 +159,36 @@ function App() {
       setResetEmail('');
     } catch (err) {
       setError(err.message || 'Erro ao enviar link de redefinição');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (newPassword.length < 6) {
+      setError('A nova senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setError('As senhas não coincidem.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      // Limpar token da URL
+      window.location.hash = '';
+      setError('✅ Senha alterada com sucesso! Faça login com a nova senha.');
+      setShowNewPassword(false);
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setIsSignUp(false);
+      setShowReset(false);
+    } catch (err) {
+      setError(err.message || 'Erro ao atualizar a senha. O link pode ter expirado — solicite um novo.');
     } finally {
       setLoading(false);
     }
@@ -271,6 +321,75 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <div className="w-8 h-8 border-4 border-gray-700 border-t-gray-400 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user && showNewPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-white">Nova Senha</CardTitle>
+            <p className="text-sm text-gray-400 text-center mt-1">
+              Digite sua nova senha de acesso
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-300">Nova senha</label>
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Confirmar nova senha</label>
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
+                />
+              </div>
+              {error && (
+                <div className={`p-3 rounded-md text-sm ${
+                  error.includes('✅')
+                    ? 'bg-green-900 text-green-300 border border-green-700'
+                    : 'bg-red-900 text-red-300 border border-red-700'
+                }`}>
+                  {error}
+                </div>
+              )}
+              <Button
+                type="submit"
+                className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+                disabled={loading}
+              >
+                {loading ? 'Salvando...' : 'Salvar nova senha'}
+              </Button>
+              <button
+                type="button"
+                className="w-full text-sm text-gray-400 hover:text-gray-300"
+                onClick={() => {
+                  setShowNewPassword(false);
+                  window.location.hash = '';
+                }}
+              >
+                ← Voltar para o login
+              </button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     );
   }
