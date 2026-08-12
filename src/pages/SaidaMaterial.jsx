@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { ArrowDown, ShieldCheck, FileText, Printer, Plus, Trash2, AlertTriangle } from 'lucide-react';
 
 export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [quantity, setQuantity] = useState('');
   const [areaUso, setAreaUso] = useState('');
   const [employeeName, setEmployeeName] = useState('');
@@ -19,10 +19,12 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
   const [showSignatureSheet, setShowSignatureSheet] = useState(false);
   const [lastSignatureData, setLastSignatureData] = useState(null);
 
-  const filteredItems = items.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredItems = items
+    .filter(item => item.quantity > 0)
+    .filter(item =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.code.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   const handleAddToSaida = () => {
     if (!selectedItem) return;
@@ -250,32 +252,28 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Busca de item */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="text-sm font-medium text-gray-300 mb-1 block">Buscar Item *</label>
-                <Input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Digite o nome ou código..."
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-300 mb-1 block">Selecionar Item *</label>
-                <select
-                  value={selectedItem}
-                  onChange={(e) => setSelectedItem(e.target.value)}
-                  className="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2"
-                >
-                  <option value="">Selecione um item</option>
-                  {filteredItems.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.code} - {item.name} (Qtd: {item.quantity})
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* Seleção de item */}
+            <div className="mb-4">
+              <label className="text-sm font-medium text-gray-300 mb-1 block">Selecionar Item *</label>
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="🔍 Digite para filtrar por nome ou código..."
+                className="bg-gray-700 border-gray-600 text-white mb-2"
+              />
+              <select
+                value={selectedItem}
+                onChange={(e) => setSelectedItem(e.target.value)}
+                className="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2"
+              >
+                <option value="">Selecione um item</option>
+                {filteredItems.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.code} - {item.name} (Qtd: {item.quantity})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">Mostrando apenas itens com estoque disponível. Use a busca para filtrar.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
