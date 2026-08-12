@@ -77,6 +77,11 @@ export function ItemModal({ isOpen, onOpenChange, onSave, editingItem, isLoading
       return;
     }
 
+    if (formData.type === 'epi' && !formData.data_validade_ca) {
+      setError('⚠️ Para EPI é obrigatório informar a Data de Validade do CA.');
+      return;
+    }
+
     if (formData.type === 'ferramenta' && !formData.patrimonio.trim()) {
       setError('⚠️ Para Ferramenta é obrigatório informar o número do Patrimônio.');
       return;
@@ -152,12 +157,13 @@ export function ItemModal({ isOpen, onOpenChange, onSave, editingItem, isLoading
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-300">Data Validade CA</label>
+                  <label className="text-sm font-medium text-yellow-400">Data Validade CA *</label>
                   <Input
                     type="date"
                     value={formData.data_validade_ca}
                     onChange={(e) => setFormData({ ...formData, data_validade_ca: e.target.value })}
-                    className="bg-gray-700 border-gray-600 text-white"
+                    required
+                    className="bg-gray-700 border-yellow-600 text-white"
                   />
                 </div>
               </div>
