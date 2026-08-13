@@ -18,6 +18,34 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
   const [saidaList, setSaidaList] = useState([]);
   const [showSignatureSheet, setShowSignatureSheet] = useState(false);
   const [lastSignatureData, setLastSignatureData] = useState(null);
+  const [ultimaRetirada, setUltimaRetirada] = useState(null);
+  const [isLoadingUltima, setIsLoadingUltima] = useState(false);
+
+  // Buscar a última retirada do item selecionado pela mesma pessoa
+  const buscarUltimaRetirada = async (itemId, requisitante) => {
+    if (!itemId || !requisitante.trim()) {
+      setUltimaRetirada(null);
+      return;
+    }
+    setIsLoadingUltima(true);
+    try {
+      const { data, error } = await supabase
+        .from('stock_movements')
+        .select('*')
+        .eq('item_id', itemId)
+        .eq('type', 'saida')
+        .ilike('reason', `%Requisitante: ${requisitante.trim()}%`)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      setUltimaRetirada(data && data.length > 0 ? data[0] : null);
+    } catch (err) {
+      console.error('Erro ao buscar última retirada:', err);
+      setUltimaRetirada(null);
+    } finally {
+      setIsLoadingUltima(false);
+    }
+  };
 
   const filteredItems = items
     .filter(item => item.quantity > 0)
@@ -350,7 +378,16 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
                     <label className="text-sm font-medium text-gray-300 mb-1 block">Nome do Funcionário *</label>
                     <Input
                       value={employeeName}
-                      onChange={(e) => setEmployeeName(e.target.value)}
+                      onChange={(e) => {
+                        setEmployeeName(e.target.value);
+                        // Buscar última retirada quando o nome for preenchido
+                        if (saidaList.length > 0 && e.target.value.trim().length > 2) {
+                          const itemId = saidaList[0].item.id;
+                          buscarUltimaRetirada(itemId, e.target.value);
+                        } else {
+                          setUltimaRetirada(null);
+                        }
+                      }}
                       placeholder="Nome completo"
                       className="bg-gray-700 border-gray-600 text-white"
                     />
@@ -365,6 +402,41 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
                     />
                   </div>
                 </div>
+
+                {/* Última retirada do mesmo item pela mesma pessoa */}
+                {employeeName.trim().length > 2 && saidaList.length > 0 && (
+                  <div className="p-4 bg-gray-900 border border-gray-600 rounded-lg">
+                    <h4 className="text-white font-semibold text-sm mb-2 flex items-center gap-2">
+                      <ArrowDown className="w-4 h-4 text-blue-400" />
+                      Última Retirada deste Item por {employeeName}
+                    </h4>
+                    {isLoadingUltima ? (
+                      <p className="text-gray-400 text-sm">Buscando...</p>
+                    ) : ultimaRetirada ? (
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-300">
+                          <span className="text-gray-400">Data:</span>{' '}
+                          {new Date(ultimaRetirada.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+                          {' • '}
+                          <span className="text-gray-400">Quantidade:</span> {ultimaRetirada.quantity}
+                          {' • '}
+                          <span className="text-gray-400">Setor:</span> {ultimaRetirada.area_uso || 'N/A'}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Observação: {ultimaRetirada.reason || 'Nenhuma'}
+                        </p>
+                        <p className="text-xs text-yellow-400 mt-2 flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          Item já foi retirado anteriormente por esta pessoa. Confirme antes de registrar nova saída.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-green-400 flex items-center gap-2">
+                        ✅ Nenhuma retirada anterior encontrada para este item por {employeeName}.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Termo de Responsabilidade para EPI/Ferramenta */}
                 {hasEPIorFerramenta && (
