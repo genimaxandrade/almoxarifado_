@@ -54,19 +54,11 @@ function App() {
   // Permissões
   const { userRole } = usePermissions(user);
 
-  // Detectar link de redefinição de senha vindo do email
+  // Detectar link de redefinição de senha vindo do email (PKCE e Implicit)
   useEffect(() => {
     const hash = window.location.hash;
     const urlParams = new URLSearchParams(window.location.search);
-    const errorParam = urlParams.get('error') || urlParams.get('error_description');
-    if (hash.includes('access_token=') && !hash.includes('error=')) {
-      setShowNewPassword(true);
-      // Detectar token de erro no hash também
-      const hashError = urlParams.get('error');
-      if (hashError) {
-        setError('Link de redefinição inválido ou expirado. Solicite um novo link.');
-      }
-    } else if (hash.includes('error=')) {
+    if (hash.includes('error=') || urlParams.get('error')) {
       setError('Link de redefinição inválido ou expirado. Solicite um novo link.');
     }
   }, []);
@@ -75,6 +67,18 @@ function App() {
     checkUser();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Fluxo PKCE de redefinição de senha:
+        // quando o link do email é aberto, o Supabase troca o código por sessão
+        // e dispara o evento PASSWORD_RECOVERY
+        if (event === 'PASSWORD_RECOVERY') {
+          setShowNewPassword(true);
+          setUser(session?.user || null);
+          if (session?.user) {
+            extractUserName(session.user.email);
+          }
+          setLoading(false);
+          return;
+        }
         setUser(session?.user || null);
         if (session?.user) {
           extractUserName(session.user.email);
