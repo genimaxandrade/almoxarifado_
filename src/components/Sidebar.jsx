@@ -20,6 +20,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldAlert,
+  Wrench,
+  ClipboardList,
+  RotateCcw,
 } from 'lucide-react';
 
 const menuStructure = [
@@ -31,6 +34,14 @@ const menuStructure = [
       { id: 'reposicao', label: 'Reposição de Estoque', icon: ArrowUp, description: 'Atualizar quantidades' },
       { id: 'solicitacoes', label: 'Solicitações de Compra', icon: ShoppingCart, description: 'Criar pedidos de compra' },
       { id: 'alertas', label: 'Alertas', icon: Bell, description: 'Notificações do sistema' },
+    ],
+  },
+  {
+    section: 'FERRAMENTAS',
+    items: [
+      { id: 'entrega_ferramentas', label: 'Entrega de Ferramentas', icon: Wrench, description: 'Registrar entrega a funcionário' },
+      { id: 'ferramentas_por_funcionario', label: 'Ferramentas por Funcionário', icon: ClipboardList, description: 'Ver o que cada um tem' },
+      { id: 'devolucao_ferramentas', label: 'Devolução de Ferramentas', icon: RotateCcw, description: 'Registrar devoluções' },
     ],
   },
   {

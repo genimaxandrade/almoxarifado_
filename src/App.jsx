@@ -24,6 +24,9 @@ import { GerenciamentoPermissoes } from '@/pages/GerenciamentoPermissoes';
 import { Etiquetas } from '@/pages/Etiquetas';
 import { Backup } from '@/pages/Backup';
 import { Ajuda } from '@/pages/Ajuda';
+import { EntregaFerramentas } from '@/pages/EntregaFerramentas';
+import { FerramentasPorFuncionario } from '@/pages/FerramentasPorFuncionario';
+import { DevolucaoFerramentas } from '@/pages/DevolucaoFerramentas';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -292,6 +295,12 @@ function App() {
         return <SolicitacoesCompra />;
       case 'alertas':
         return <Alertas items={items} />;
+      case 'entrega_ferramentas':
+        return <EntregaFerramentas userEmail={user?.email} />;
+      case 'ferramentas_por_funcionario':
+        return <FerramentasPorFuncionario />;
+      case 'devolucao_ferramentas':
+        return <DevolucaoFerramentas userEmail={user?.email} />;
       case 'historico_diario':
         return <HistoricoDiario />;
       case 'relatorio_mensal':
