@@ -161,18 +161,13 @@ export function Sidebar({ currentPage, onNavigate, userRole = 'user', userName, 
                       <Icon className="w-5 h-5 flex-shrink-0" />
                       {isOpen && (
                         <>
-                          <span className="flex-1 text-sm font-medium truncate">{item.label}</span>
+                          <span className="flex-1 text-sm font-medium whitespace-normal break-words leading-tight">{item.label}</span>
                           {item.badge && (
                             <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-6 h-6 flex items-center justify-center px-1.5">
                               {item.badge}
                             </span>
                           )}
                         </>
-                      )}
-                      {isOpen && !isActive && !isDisabled && (
-                        <span className="hidden group-hover:block fixed bg-gray-900 text-gray-300 text-xs px-2 py-1 rounded shadow-lg border border-gray-700 z-50 ml-2 whitespace-nowrap">
-                          {item.description}
-                        </span>
                       )}
                     </button>
                   </li>
