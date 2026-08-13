@@ -170,7 +170,7 @@ export function Sidebar({ currentPage, onNavigate, userRole = 'user', userName, 
                         </>
                       )}
                       {isOpen && !isActive && !isDisabled && (
-                        <span className="hidden group-hover:block absolute right-2 text-xs text-gray-500">
+                        <span className="hidden group-hover:block fixed bg-gray-900 text-gray-300 text-xs px-2 py-1 rounded shadow-lg border border-gray-700 z-50 ml-2 whitespace-nowrap">
                           {item.description}
                         </span>
                       )}
