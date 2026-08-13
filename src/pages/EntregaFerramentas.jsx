@@ -3,7 +3,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Wrench, ShieldCheck, Printer, Plus, Trash2, UserCheck } from 'lucide-react';
+import { Wrench, ShieldCheck, Printer, Plus, Trash2, UserCheck, Camera } from 'lucide-react';
+import { QrCodeReader } from '@/components/QrCodeReader';
 
 export function EntregaFerramentas({ userEmail }) {
   const [funcionarios, setFuncionarios] = useState([]);
@@ -20,6 +21,8 @@ export function EntregaFerramentas({ userEmail }) {
   const [entregaList, setEntregaList] = useState([]);
   const [showTermo, setShowTermo] = useState(false);
   const [lastTermoData, setLastTermoData] = useState(null);
+  const [showQrReader, setShowQrReader] = useState(false);
+  const [qrMode, setQrMode] = useState('funcionario');
 
   useEffect(() => {
     loadFuncionarios();
@@ -41,6 +44,43 @@ export function EntregaFerramentas({ userEmail }) {
       .in('type', ['ferramenta', 'epi', 'equipamento'])
       .order('name');
     setFerramentas(data || []);
+  };
+
+  // Tratamento do QR Code lido
+  const handleQrScan = (valor) => {
+    const v = valor.trim().toUpperCase();
+    if (v.startsWith('FUNC:')) {
+      const codigo = v.replace('FUNC:', '');
+      const emp = funcionarios.find(f =>
+        f.matricula?.toUpperCase() === codigo || f.name.replace(/\s+/g, '_').toUpperCase() === codigo
+      );
+      if (emp) {
+        handleSelectEmployee(emp);
+        setMessage(`✅ Funcionário lido: ${emp.name}`);
+      } else {
+        setMessage(`❌ Funcionário com código "${codigo}" não encontrado.`);
+      }
+      setTimeout(() => setMessage(''), 4000);
+    } else if (v.startsWith('MAT:')) {
+      const codigo = v.replace('MAT:', '');
+      const item = ferramentas.find(f => f.code.toUpperCase() === codigo);
+      if (item) {
+        setSelectedItem(item.id);
+        setItemSearch('');
+        setMessage(`✅ Ferramenta lida: ${item.code} - ${item.name}`);
+      } else {
+        setMessage(`❌ Ferramenta com código "${codigo}" não encontrada (ou sem estoque).`);
+      }
+      setTimeout(() => setMessage(''), 4000);
+    } else {
+      setMessage(`❌ QR Code não reconhecido: ${valor}`);
+      setTimeout(() => setMessage(''), 4000);
+    }
+  };
+
+  const openQrReader = (mode) => {
+    setQrMode(mode);
+    setShowQrReader(true);
   };
 
   const filteredFuncionarios = funcionarios.filter(f =>
@@ -298,9 +338,18 @@ export function EntregaFerramentas({ userEmail }) {
 
             {/* 1. Selecionar Funcionário */}
             <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                1. Funcionário *
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-300 block">
+                  1. Funcionário *
+                </label>
+                <Button
+                  type="button"
+                  onClick={() => openQrReader('funcionario')}
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-8"
+                >
+                  <Camera className="w-3.5 h-3.5 mr-1" /> Ler QR Code
+                </Button>
+              </div>
               <Input
                 placeholder="🔍 Buscar por nome ou matrícula..."
                 value={employeeSearch}
@@ -342,9 +391,18 @@ export function EntregaFerramentas({ userEmail }) {
             {/* 2. Adicionar Ferramentas */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-1">
-                <label className="text-sm font-medium text-gray-300 mb-2 block">
-                  2. Buscar Ferramenta/EPI
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-300 block">
+                    2. Buscar Ferramenta/EPI
+                  </label>
+                  <Button
+                    type="button"
+                    onClick={() => openQrReader('item')}
+                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-8"
+                  >
+                    <Camera className="w-3.5 h-3.5 mr-1" /> Ler QR Code
+                  </Button>
+                </div>
                 <Input
                   placeholder="🔍 Nome ou código..."
                   value={itemSearch}

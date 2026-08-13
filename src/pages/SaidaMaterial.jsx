@@ -3,7 +3,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowDown, ShieldCheck, FileText, Printer, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowDown, ShieldCheck, FileText, Printer, Plus, Trash2, AlertTriangle, Camera } from 'lucide-react';
+import { QrCodeReader } from '@/components/QrCodeReader';
 
 export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
   const [selectedItem, setSelectedItem] = useState('');
@@ -20,6 +21,8 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
   const [lastSignatureData, setLastSignatureData] = useState(null);
   const [ultimaRetirada, setUltimaRetirada] = useState(null);
   const [isLoadingUltima, setIsLoadingUltima] = useState(false);
+  const [showQrReader, setShowQrReader] = useState(false);
+  const [qrMode, setQrMode] = useState('item'); // 'item' ou 'funcionario'
 
   // Buscar a última retirada do item selecionado pela mesma pessoa
   const buscarUltimaRetirada = async (itemId, requisitante) => {
@@ -45,6 +48,50 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
     } finally {
       setIsLoadingUltima(false);
     }
+  };
+
+  // Tratamento do QR Code lido
+  const handleQrScan = (valor) => {
+    const v = valor.trim().toUpperCase();
+    if (v.startsWith('MAT:')) {
+      const codigo = v.replace('MAT:', '');
+      const item = items.find(i => i.code.toUpperCase() === codigo);
+      if (item) {
+        setSelectedItem(item.id);
+        setSearchTerm('');
+        setMessage(`✅ Item lido: ${item.code} - ${item.name}`);
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        setMessage(`❌ Material com código "${codigo}" não encontrado no estoque.`);
+        setTimeout(() => setMessage(''), 4000);
+      }
+    } else if (v.startsWith('FUNC:')) {
+      const codigo = v.replace('FUNC:', '');
+      supabase
+        .from('employees')
+        .select('*')
+        .or(`matricula.eq.${codigo},name.ilike.%${codigo}%`)
+        .limit(1)
+        .single()
+        .then(({ data, error }) => {
+          if (data) {
+            setEmployeeName(data.name);
+            setEmployeeDepartment(data.department || '');
+            setMessage(`✅ Funcionário lido: ${data.name}`);
+          } else {
+            setMessage(`❌ Funcionário com código "${codigo}" não encontrado.`);
+          }
+          setTimeout(() => setMessage(''), 4000);
+        });
+    } else {
+      setMessage(`❌ QR Code não reconhecido: ${valor}`);
+      setTimeout(() => setMessage(''), 4000);
+    }
+  };
+
+  const openQrReader = (mode) => {
+    setQrMode(mode);
+    setShowQrReader(true);
   };
 
   const filteredItems = items
@@ -282,7 +329,16 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
           <CardContent>
             {/* Seleção de item */}
             <div className="mb-4">
-              <label className="text-sm font-medium text-gray-300 mb-1 block">Selecionar Item *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm font-medium text-gray-300 block">Selecionar Item *</label>
+                <Button
+                  type="button"
+                  onClick={() => openQrReader('item')}
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-8"
+                >
+                  <Camera className="w-3.5 h-3.5 mr-1" /> Ler QR Code
+                </Button>
+              </div>
               <Input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -375,7 +431,16 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
                 <h3 className="text-white font-semibold">Requisitante</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-300 mb-1 block">Nome do Funcionário *</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-sm font-medium text-gray-300 block">Nome do Funcionário *</label>
+                      <Button
+                        type="button"
+                        onClick={() => openQrReader('funcionario')}
+                        className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-8"
+                      >
+                        <Camera className="w-3.5 h-3.5 mr-1" /> Ler QR Code
+                      </Button>
+                    </div>
                     <Input
                       value={employeeName}
                       onChange={(e) => {
@@ -468,6 +533,10 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
                   </div>
                 )}
               </div>
+            )}
+
+            {showQrReader && (
+              <QrCodeReader onScan={handleQrScan} onClose={() => setShowQrReader(false)} />
             )}
 
             {message && (

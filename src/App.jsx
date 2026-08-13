@@ -21,7 +21,7 @@ import { HistoricoPrecos } from '@/pages/HistoricoPrecos';
 import { Graficos } from '@/pages/Graficos';
 import { Funcionarios } from '@/pages/Funcionarios';
 import { GerenciamentoPermissoes } from '@/pages/GerenciamentoPermissoes';
-import { Etiquetas } from '@/pages/Etiquetas';
+import { EtiquetasQrCode } from '@/pages/EtiquetasQrCode';
 import { Backup } from '@/pages/Backup';
 import { Ajuda } from '@/pages/Ajuda';
 import { EntregaFerramentas } from '@/pages/EntregaFerramentas';
@@ -316,7 +316,7 @@ function App() {
       case 'permissoes':
         return <GerenciamentoPermissoes currentUser={user} />;
       case 'etiquetas':
-        return <Etiquetas />;
+        return <EtiquetasQrCode />;
       case 'backup':
         return <Backup items={items} onItemsUpdated={loadItems} />;
       case 'ajuda':

@@ -3,7 +3,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { RotateCcw, Search, RotateCcw as ReturnIcon } from 'lucide-react';
+import { RotateCcw, Search, RotateCcw as ReturnIcon, Camera } from 'lucide-react';
+import { QrCodeReader } from '@/components/QrCodeReader';
 
 export function DevolucaoFerramentas({ userEmail }) {
   const [funcionarios, setFuncionarios] = useState([]);
@@ -13,6 +14,7 @@ export function DevolucaoFerramentas({ userEmail }) {
   const [returnObs, setReturnObs] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showQrReader, setShowQrReader] = useState(false);
 
   useEffect(() => {
     loadFuncionarios();
@@ -24,6 +26,27 @@ export function DevolucaoFerramentas({ userEmail }) {
       .select('*')
       .order('name');
     setFuncionarios(data || []);
+  };
+
+  // Tratamento do QR Code lido
+  const handleQrScan = (valor) => {
+    const v = valor.trim().toUpperCase();
+    if (v.startsWith('FUNC:')) {
+      const codigo = v.replace('FUNC:', '');
+      const emp = funcionarios.find(f =>
+        f.matricula?.toUpperCase() === codigo || f.name.replace(/\s+/g, '_').toUpperCase() === codigo
+      );
+      if (emp) {
+        handleSelectFuncionario(emp);
+        setMessage(`✅ Funcionário lido: ${emp.name}`);
+      } else {
+        setMessage(`❌ Funcionário com código "${codigo}" não encontrado.`);
+      }
+      setTimeout(() => setMessage(''), 4000);
+    } else {
+      setMessage(`❌ QR Code não reconhecido: ${valor}`);
+      setTimeout(() => setMessage(''), 4000);
+    }
   };
 
   const filteredFuncionarios = funcionarios.filter(f =>
@@ -139,11 +162,20 @@ export function DevolucaoFerramentas({ userEmail }) {
             </div>
           )}
 
-          {/* Busca de funcionário */}
-          <div>
-            <label className="text-sm font-medium text-gray-300 mb-2 block">
-              1. Buscar Funcionário
-            </label>
+            {/* Busca de funcionário */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-300 block">
+                  1. Buscar Funcionário
+                </label>
+                <Button
+                  type="button"
+                  onClick={() => setShowQrReader(true)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-8"
+                >
+                  <Camera className="w-3.5 h-3.5 mr-1" /> Ler QR Code
+                </Button>
+              </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <Input
@@ -179,6 +211,10 @@ export function DevolucaoFerramentas({ userEmail }) {
           </div>
 
           {/* Resultado */}
+          {showQrReader && (
+            <QrCodeReader onScan={handleQrScan} onClose={() => setShowQrReader(false)} />
+          )}
+
           {selectedFuncionario && (
             <>
               <div className="p-4 bg-blue-900/30 border border-blue-700 rounded-md">
