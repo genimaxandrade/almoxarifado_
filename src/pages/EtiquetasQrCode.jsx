@@ -73,6 +73,13 @@ export function EtiquetasQrCode() {
     setSelecionados([]);
   };
 
+  const selecionarTodos = () => {
+    const ids = filtrados.map(item => `${abaAtiva}:${item.id}`);
+    setSelecionados(ids);
+  };
+
+  const desmarcarTodos = () => setSelecionados([]);
+
   const filtrados = abaAtiva === 'funcionarios'
     ? funcionarios.filter(f =>
         f.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -152,7 +159,7 @@ export function EtiquetasQrCode() {
               </Button>
             </div>
 
-            {/* Busca */}
+            {/* Busca + Seleção em massa */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <Input
@@ -161,6 +168,23 @@ export function EtiquetasQrCode() {
                 onChange={(e) => setSearch(e.target.value)}
                 className="bg-gray-700 border-gray-600 text-white placeholder-gray-500 pl-10"
               />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={selecionarTodos}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-sm"
+              >
+                ✔️ Selecionar Todos ({filtrados.length})
+              </Button>
+              <Button
+                type="button"
+                onClick={desmarcarTodos}
+                variant="outline"
+                className="flex-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 text-sm"
+              >
+                ✖ Desmarcar Todos
+              </Button>
             </div>
 
             {/* Seleção múltipla */}
@@ -198,11 +222,12 @@ export function EtiquetasQrCode() {
               )}
             </div>
 
-            {selecionados.length > 0 && (
-              <p className="text-sm text-blue-300">
-                {selecionados.length} item(ns) selecionado(s)
-              </p>
-            )}
+            <p className="text-sm text-blue-300">
+              {selecionados.length > 0
+                ? `${selecionados.length} item(ns) selecionado(s)`
+                : 'Nenhum item selecionado. Use "Selecionar Todos" para marcar tudo de uma vez.'
+              }
+            </p>
 
             <div className="flex gap-3">
               <Button
