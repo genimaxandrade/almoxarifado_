@@ -45,6 +45,8 @@ function App() {
   const [currentPage, setCurrentPage] = useState('controle');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [viewingItem, setViewingItem] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [importError, setImportError] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -746,24 +748,62 @@ function App() {
                               </td>
                               <td className="px-4 py-3 text-gray-400 text-sm">R$ {(item.preco_unitario || 0).toFixed(2)}</td>
                               <td className="px-4 py-3 text-gray-400 text-sm">{item.fornecedor || '-'}</td>
-                              <td className="px-4 py-3 space-x-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingItem(item);
-                                    setIsModalOpen(true);
-                                  }}
-                                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                                >
-                                  Editar
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleDeleteItem(item.id)}
-                                  className="bg-red-600 hover:bg-red-700 text-white"
-                                >
-                                  Deletar
-                                </Button>
+                              <td className="px-4 py-3 text-center">
+                                <div className="relative inline-block">
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
+                                    className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition"
+                                    title="Opções"
+                                  >
+                                    ⋯
+                                  </button>
+                                  {openMenuId === item.id && (
+                                    <>
+                                      <div
+                                        className="fixed inset-0 z-10"
+                                        onClick={() => setOpenMenuId(null)}
+                                      ></div>
+                                      <div className="absolute right-0 top-full mt-1 w-48 rounded-md border border-gray-600 bg-gray-800 shadow-xl z-20 overflow-hidden">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setViewingItem(item);
+                                            setOpenMenuId(null);
+                                          }}
+                                          className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-gray-700 flex items-center gap-2"
+                                        >
+                                          👁️ Visualizar
+                                        </button>
+                                        {userRole === 'admin' && (
+                                          <>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setOpenMenuId(null);
+                                                setEditingItem(item);
+                                                setIsModalOpen(true);
+                                              }}
+                                              className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-gray-700 flex items-center gap-2 border-t border-gray-700"
+                                            >
+                                              ✏️ Editar
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setOpenMenuId(null);
+                                                handleDeleteItem(item.id);
+                                              }}
+                                              className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2 border-t border-gray-700"
+                                            >
+                                              🗑️ Excluir
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -779,6 +819,33 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Modal de Visualização */}
+      {viewingItem && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setViewingItem(null)}>
+          <div className="bg-gray-800 border border-gray-700 rounded-lg max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-lg font-semibold text-white">Detalhes do Item</h2>
+              <button onClick={() => setViewingItem(null)} className="text-gray-400 hover:text-white text-xl">&times;</button>
+            </div>
+            <div className="space-y-2.5 text-sm">
+              <p className="text-gray-300"><span className="text-gray-500">Código:</span> {viewingItem.code || '-'}</p>
+              <p className="text-gray-300"><span className="text-gray-500">Nome:</span> {viewingItem.name}</p>
+              <p className="text-gray-300"><span className="text-gray-500">Tipo:</span> {viewingItem.type?.toUpperCase()}</p>
+              <p className="text-gray-300"><span className="text-gray-500">Unidade:</span> {viewingItem.unit}</p>
+              <p className="text-gray-300"><span className="text-gray-500">Quantidade:</span> {viewingItem.quantity}</p>
+              {viewingItem.ca && <p className="text-gray-300"><span className="text-gray-500">CA:</span> {viewingItem.ca}</p>}
+              {viewingItem.data_validade_ca && <p className="text-gray-300"><span className="text-gray-500">Validade do CA:</span> {new Date(viewingItem.data_validade_ca).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p>}
+              {viewingItem.patrimonio && <p className="text-gray-300"><span className="text-gray-500">Patrimônio:</span> {viewingItem.patrimonio}</p>}
+              <p className="text-gray-300"><span className="text-gray-500">Localização:</span> {viewingItem.localizacao || '-'}</p>
+              <p className="text-gray-300"><span className="text-gray-500">Estoque Mínimo:</span> {viewingItem.estoque_minimo ?? '-'}</p>
+              <p className="text-gray-300"><span className="text-gray-500">Estoque de Segurança:</span> {viewingItem.estoque_seguranca ?? '-'}</p>
+              {viewingItem.fornecedor && <p className="text-gray-300"><span className="text-gray-500">Fornecedor:</span> {viewingItem.fornecedor}</p>}
+              <p className="text-gray-300"><span className="text-gray-500">Preço Unitário:</span> R$ {(viewingItem.preco_unitario || 0).toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Item Modal */}
       <ItemModal
