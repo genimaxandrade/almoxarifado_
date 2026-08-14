@@ -49,10 +49,13 @@ export function DevolucaoFerramentas({ userEmail }) {
     }
   };
 
-  const filteredFuncionarios = funcionarios.filter(f =>
-    f.name.toLowerCase().includes(search.toLowerCase()) ||
-    f.matricula?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredFuncionarios = funcionarios
+    .filter(f =>
+      !search ||
+      f.name.toLowerCase().includes(search.toLowerCase()) ||
+      f.matricula?.toLowerCase().includes(search.toLowerCase())
+    )
+    .slice(0, 40);
 
   const handleSelectFuncionario = async (func) => {
     setIsLoading(true);
@@ -191,7 +194,7 @@ export function DevolucaoFerramentas({ userEmail }) {
                 className="bg-gray-700 border-gray-600 text-white placeholder-gray-500 pl-10"
               />
             </div>
-            {search && !selectedFuncionario && filteredFuncionarios.length > 0 && (
+            {!selectedFuncionario && filteredFuncionarios.length > 0 && (
               <div className="mt-2 max-h-48 overflow-y-auto bg-gray-700 rounded-md border border-gray-600">
                 {filteredFuncionarios.map(f => (
                   <button

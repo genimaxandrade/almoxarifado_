@@ -83,17 +83,22 @@ export function EntregaFerramentas({ userEmail }) {
     setShowQrReader(true);
   };
 
-  const filteredFuncionarios = funcionarios.filter(f =>
-    f.name.toLowerCase().includes(employeeSearch.toLowerCase()) ||
-    f.matricula?.toLowerCase().includes(employeeSearch.toLowerCase())
-  );
+  const filteredFuncionarios = funcionarios
+    .filter(f =>
+      !employeeSearch ||
+      f.name.toLowerCase().includes(employeeSearch.toLowerCase()) ||
+      f.matricula?.toLowerCase().includes(employeeSearch.toLowerCase())
+    )
+    .slice(0, 40);
 
   const filteredFerramentas = ferramentas
     .filter(f => f.quantity > 0)
     .filter(f =>
+      !itemSearch ||
       f.name.toLowerCase().includes(itemSearch.toLowerCase()) ||
       f.code.toLowerCase().includes(itemSearch.toLowerCase())
-    );
+    )
+    .slice(0, 40);
 
   const handleSelectEmployee = (emp) => {
     setSelectedEmployee(emp);
@@ -359,7 +364,7 @@ export function EntregaFerramentas({ userEmail }) {
                 }}
                 className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
               />
-              {employeeSearch && !selectedEmployee && filteredFuncionarios.length > 0 && (
+              {!selectedEmployee && filteredFuncionarios.length > 0 && (
                 <div className="mt-2 max-h-40 overflow-y-auto bg-gray-700 rounded-md border border-gray-600">
                   {filteredFuncionarios.map(emp => (
                     <button
@@ -408,11 +413,11 @@ export function EntregaFerramentas({ userEmail }) {
                   value={itemSearch}
                   onChange={(e) => {
                     setItemSearch(e.target.value);
-                    if (e.target.value === '') setSelectedItem('');
+                    if (e.target.value === '') { setSelectedItem(''); }
                   }}
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                 />
-                {itemSearch && !selectedItem && filteredFerramentas.length > 0 && (
+                {!selectedItem && filteredFerramentas.length > 0 && (
                   <div className="mt-2 max-h-40 overflow-y-auto bg-gray-700 rounded-md border border-gray-600">
                     {filteredFerramentas.map(f => (
                       <button
