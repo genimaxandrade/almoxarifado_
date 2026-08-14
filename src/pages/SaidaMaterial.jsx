@@ -23,6 +23,36 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
   const [isLoadingUltima, setIsLoadingUltima] = useState(false);
   const [showQrReader, setShowQrReader] = useState(false);
   const [qrMode, setQrMode] = useState('item'); // 'item' ou 'funcionario'
+  const [employees, setEmployees] = useState([]);
+  const [showEmployeeSuggestions, setShowEmployeeSuggestions] = useState(false);
+
+  useEffect(() => {
+    // Carregar funcionários cadastrados para autocompletar
+    supabase
+      .from('employees')
+      .select('id, name, department, position, matricula')
+      .order('name', { ascending: true })
+      .then(({ data }) => {
+        if (data) setEmployees(data);
+      });
+  }, []);
+
+  const selectEmployee = (emp) => {
+    setEmployeeName(emp.name);
+    setEmployeeDepartment(emp.department || '');
+    setShowEmployeeSuggestions(false);
+    if (saidaList.length > 0) {
+      const itemId = saidaList[0].item.id;
+      buscarUltimaRetirada(itemId, emp.name);
+    }
+  };
+
+  const filteredEmployees = employees.filter(
+    (emp) =>
+      emp.name &&
+      emp.name.toLowerCase().includes(employeeName.trim().toLowerCase()) &&
+      employeeName.trim().length > 0
+  );
 
   // Buscar a última retirada do item selecionado pela mesma pessoa
   const buscarUltimaRetirada = async (itemId, requisitante) => {
@@ -441,10 +471,12 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
                         <Camera className="w-3.5 h-3.5 mr-1" /> Ler QR Code
                       </Button>
                     </div>
+                    <div className="relative">
                     <Input
                       value={employeeName}
                       onChange={(e) => {
                         setEmployeeName(e.target.value);
+                        setShowEmployeeSuggestions(true);
                         // Buscar última retirada quando o nome for preenchido
                         if (saidaList.length > 0 && e.target.value.trim().length > 2) {
                           const itemId = saidaList[0].item.id;
@@ -453,9 +485,30 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
                           setUltimaRetirada(null);
                         }
                       }}
-                      placeholder="Nome completo"
+                      onFocus={() => setShowEmployeeSuggestions(true)}
+                      placeholder="Nome completo (busque ou selecione)"
+                      autoComplete="off"
                       className="bg-gray-700 border-gray-600 text-white"
                     />
+                    {showEmployeeSuggestions && filteredEmployees.length > 0 && employeeName.trim().length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 max-h-52 overflow-y-auto rounded-md border border-gray-600 bg-gray-800 shadow-xl z-30">
+                        {filteredEmployees.slice(0, 15).map((emp) => (
+                          <button
+                            key={emp.id}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => selectEmployee(emp)}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0"
+                          >
+                            <span className="font-medium">{emp.name}</span>
+                            <span className="text-gray-400 text-xs ml-2">
+                              {emp.department || emp.position || ''}{emp.matricula ? ` • Matr. ${emp.matricula}` : ''}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    </div>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-300 mb-1 block">Departamento / Setor</label>
