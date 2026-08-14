@@ -55,12 +55,33 @@ function App() {
   const { userRole } = usePermissions(user);
 
   // Detectar link de redefinição de senha vindo do email (PKCE e Implicit)
+  // O link do Supabase abre com hash tipo: #access_token=...&type=recovery
+  // ou #code=...&type=recovery (fluxo PKCE).
+  const isRecoveryLink = () => {
+    const hash = window.location.hash;
+    return hash.includes('type=recovery') || hash.includes('type=password_recovery');
+  };
+
   useEffect(() => {
     const hash = window.location.hash;
     const urlParams = new URLSearchParams(window.location.search);
     if (hash.includes('error=') || urlParams.get('error')) {
       setError('Link de redefinição inválido ou expirado. Solicite um novo link.');
     }
+    // Link de redefinição aberto (app já carregado ou recém carregado)
+    if (isRecoveryLink()) {
+      setShowNewPassword(true);
+      setLoading(false);
+    }
+    // Também escuta hashchange caso o link seja aberto com o app já no ar
+    const onHashChange = () => {
+      if (isRecoveryLink()) {
+        setShowNewPassword(true);
+        setLoading(false);
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   useEffect(() => {
@@ -70,7 +91,7 @@ function App() {
         // Fluxo PKCE de redefinição de senha:
         // quando o link do email é aberto, o Supabase troca o código por sessão
         // e dispara o evento PASSWORD_RECOVERY
-        if (event === 'PASSWORD_RECOVERY') {
+        if (event === 'PASSWORD_RECOVERY' || isRecoveryLink()) {
           setShowNewPassword(true);
           setUser(session?.user || null);
           if (session?.user) {
@@ -338,7 +359,7 @@ function App() {
     );
   }
 
-  if (!user && showNewPassword) {
+  if (showNewPassword || (isRecoveryLink() && !loading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
         <Card className="w-full max-w-md bg-gray-800 border-gray-700">
