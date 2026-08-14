@@ -279,6 +279,17 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
     window.print();
   };
 
+  // Dados para a folha de saída por funcionário (todos os itens da lista)
+  const printSaida = {
+    employeeName,
+    employeeDepartment,
+    items: saidaList.map((s) => ({
+      item: s.item,
+      quantity: s.quantity,
+      areaUso: s.areaUso,
+    })),
+  };
+
   const getSecurityAlert = (item, qty) => {
     const newQty = item.quantity - qty;
     if (newQty <= item.estoque_seguranca) return '🟡 atingirá estoque de segurança';
@@ -337,6 +348,55 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
                 <div className="border-t border-black w-48"></div>
                 <p className="text-sm mt-1">Assinatura do Requisitante</p>
                 <p className="text-xs">{lastSignatureData.employeeName}</p>
+              </div>
+              <div className="text-center">
+                <div className="border-t border-black w-48"></div>
+                <p className="text-sm mt-1">Assinatura do Almoxarife</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Folha de Saída por Funcionário - Visível apenas na impressão */}
+      {saidaList.length > 0 && employeeName.trim() && (
+        <div className="print:block hidden">
+          <div className="bg-white text-black p-8 max-w-2xl mx-auto">
+            <h1 className="text-xl font-bold text-center mb-2">ALMOXARIFADO — REGISTRO DE SAÍDA DE MATERIAL</h1>
+            <div className="mb-4">
+              <p><strong>Data:</strong> {new Date().toLocaleDateString('pt-BR')} <strong>Horário:</strong> {new Date().toLocaleTimeString('pt-BR')}</p>
+              <p><strong>Requisitante:</strong> {employeeName}</p>
+              {employeeDepartment && <p><strong>Setor:</strong> {employeeDepartment}</p>}
+            </div>
+            <table className="w-full border-collapse mb-4 text-sm">
+              <thead>
+                <tr>
+                  <th className="border border-black px-2 py-1">Código</th>
+                  <th className="border border-black px-2 py-1">Item</th>
+                  <th className="border border-black px-2 py-1">Tipo</th>
+                  <th className="border border-black px-2 py-1">Un</th>
+                  <th className="border border-black px-2 py-1">Qtd</th>
+                  <th className="border border-black px-2 py-1">Área de Uso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {printSaida.items.map((s, i) => (
+                  <tr key={i}>
+                    <td className="border border-black px-2 py-1">{s.item.code}</td>
+                    <td className="border border-black px-2 py-1">{s.item.name}</td>
+                    <td className="border border-black px-2 py-1">{s.item.type?.toUpperCase() || '-'}</td>
+                    <td className="border border-black px-2 py-1">{s.item.unit}</td>
+                    <td className="border border-black px-2 py-1 text-center">{s.quantity}</td>
+                    <td className="border border-black px-2 py-1">{s.areaUso || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex justify-between mt-16 pt-8">
+              <div className="text-center">
+                <div className="border-t border-black w-48"></div>
+                <p className="text-sm mt-1">Assinatura do Requisitante</p>
+                <p className="text-xs">{employeeName}</p>
               </div>
               <div className="text-center">
                 <div className="border-t border-black w-48"></div>
