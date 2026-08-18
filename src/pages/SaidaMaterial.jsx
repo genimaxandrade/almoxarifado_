@@ -252,6 +252,9 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
         }
       }
 
+      // Abrir o termo de saída em uma nova guia, já pronto para impressão
+      openTermoEmNovaAba(saidaList, employeeName, employeeDepartment);
+
       // Salvar dados para a folha de assinatura
       setLastSignatureData({
         items: saidaList,
@@ -278,6 +281,81 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  // Abrir o termo de saída em uma nova guia, já pronta para impressão
+  const openTermoEmNovaAba = (items, requisitante, setor) => {
+    const data = new Date();
+    const dataStr = data.toLocaleDateString('pt-BR');
+    const horaStr = data.toLocaleTimeString('pt-BR');
+    const rows = items
+      .map(
+        (s) => `<tr>
+          <td class="c">${s.item.code || ''}</td>
+          <td class="c">${s.item.name || ''}</td>
+          <td class="c">${(s.item.type || '').toUpperCase()}</td>
+          <td class="c">${s.item.unit || ''}</td>
+          <td class="c" style="text-align:center">${s.quantity}</td>
+          <td class="c">${s.areaUso || '-'}</td>
+        </tr>`
+      )
+      .join('');
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Termo de Saída de Material</title>
+<style>
+  @media print {
+    body { margin: 0; }
+    .no-print { display: none !important; }
+  }
+  body { font-family: Arial, Helvetica, sans-serif; color: #000; padding: 40px; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 20px; text-align: center; margin: 0 0 8px; }
+  .sub { text-align: center; color: #555; font-size: 13px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 13px; }
+  th, td { border: 1px solid #000; padding: 5px 8px; }
+  th { background: #f0f0f0; }
+  .assin { display: flex; justify-content: space-between; margin-top: 80px; }
+  .assin .bloco { text-align: center; width: 220px; }
+  .assin .linha { border-top: 1px solid #000; }
+  .btn { display: inline-block; margin: 16px 6px 0; padding: 10px 22px; background: #16a34a; color: #fff; border: 0; border-radius: 6px; font-size: 15px; cursor: pointer; }
+  .btn2 { background: #6b7280; }
+</style>
+</head>
+<body>
+  <div class="no-print" style="text-align:center">
+    <button class="btn" onclick="window.print()">🖨️ Imprimir Termo</button>
+    <button class="btn btn2" onclick="window.close()">✕ Fechar</button>
+    <p style="color:#777; font-size:13px; margin-top:8px">Dica: no diálogo de impressão, escolha a impressora ou &quot;Salvar como PDF&quot;.</p>
+  </div>
+  <h1>ALMOXARIFADO — TERMO DE SAÍDA DE MATERIAL</h1>
+  <div class="sub">Data: ${dataStr} — Horário: ${horaStr}</div>
+  <p><strong>Requisitante:</strong> ${requisitante}</p>
+  ${setor ? `<p><strong>Setor:</strong> ${setor}</p>` : ''}
+  <table>
+    <thead>
+      <tr><th>Código</th><th>Item</th><th>Tipo</th><th>Un</th><th>Qtd</th><th>Área de Uso</th></tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <p style="font-size:13px">
+    Declaro ter recebido os materiais acima relacionados em boas condições, comprometendo-me a utilizá-los exclusivamente para fins profissionais e a devolvê-los ou informar qualquer perda/dano ao almoxarifado.
+  </p>
+  <div class="assin">
+    <div class="bloco"><div class="linha"></div><p style="margin:4px 0 0; font-size:13px">Assinatura do Requisitante</p><p style="margin:2px 0 0; font-size:11px">${requisitante}</p></div>
+    <div class="bloco"><div class="linha"></div><p style="margin:4px 0 0; font-size:13px">Assinatura do Almoxarife</p></div>
+  </div>
+  <script>setTimeout(() => window.print(), 400);</script>
+</body>
+</html>`;
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    }
   };
 
   const handlePrintPreview = () => {
