@@ -25,6 +25,7 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
   const [qrMode, setQrMode] = useState('item'); // 'item' ou 'funcionario'
   const [employees, setEmployees] = useState([]);
   const [showEmployeeSuggestions, setShowEmployeeSuggestions] = useState(false);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
 
   useEffect(() => {
     // Carregar funcionários cadastrados para autocompletar
@@ -279,6 +280,18 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
     window.print();
   };
 
+  const handlePrintPreview = () => {
+    if (saidaList.length === 0) {
+      setMessage('⚠️ Adicione pelo menos um item à lista antes de imprimir.');
+      return;
+    }
+    setShowPrintPreview(true);
+    setTimeout(() => {
+      window.print();
+      setShowPrintPreview(false);
+    }, 200);
+  };
+
   // Dados para a folha de saída por funcionário (todos os itens da lista)
   const printSaida = {
     employeeName,
@@ -358,8 +371,74 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
         </div>
       )}
 
+      {/* Folha de Termo de Saída — Prévia (antes de registrar) - Qualquer tipo de item */}
+      {showPrintPreview && saidaList.length > 0 && (
+        <div className="fixed inset-0 z-[200] print:static print:block hidden">
+          <div className="bg-black/70 min-h-screen print:bg-transparent">
+            <div className="bg-white text-black p-8 max-w-2xl mx-auto my-8">
+              <div className="flex justify-end print:hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowPrintPreview(false)}
+                  className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm text-black"
+                >
+                  ✕ Fechar prévia
+                </button>
+              </div>
+              <div className="text-black">
+                <h1 className="text-xl font-bold text-center mb-2">ALMOXARIFADO — TERMO DE SAÍDA DE MATERIAL</h1>
+                <p className="text-center text-sm text-gray-600 mb-4">(Prévia — imprima para entrega ao requisitante)</p>
+                <div className="mb-4">
+                  <p><strong>Data:</strong> {new Date().toLocaleDateString('pt-BR')} <strong>Horário:</strong> {new Date().toLocaleTimeString('pt-BR')}</p>
+                  <p><strong>Requisitante:</strong> {employeeName}</p>
+                  {employeeDepartment && <p><strong>Setor:</strong> {employeeDepartment}</p>}
+                </div>
+                <table className="w-full border-collapse mb-4 text-sm">
+                  <thead>
+                    <tr>
+                      <th className="border border-black px-2 py-1">Código</th>
+                      <th className="border border-black px-2 py-1">Item</th>
+                      <th className="border border-black px-2 py-1">Tipo</th>
+                      <th className="border border-black px-2 py-1">Un</th>
+                      <th className="border border-black px-2 py-1">Qtd</th>
+                      <th className="border border-black px-2 py-1">Área de Uso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {saidaList.map((s, i) => (
+                      <tr key={i}>
+                        <td className="border border-black px-2 py-1">{s.item.code}</td>
+                        <td className="border border-black px-2 py-1">{s.item.name}</td>
+                        <td className="border border-black px-2 py-1">{s.item.type?.toUpperCase() || '-'}</td>
+                        <td className="border border-black px-2 py-1">{s.item.unit}</td>
+                        <td className="border border-black px-2 py-1 text-center">{s.quantity}</td>
+                        <td className="border border-black px-2 py-1">{s.areaUso || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="text-sm mb-2">
+                  Declaro ter recebido os materiais acima relacionados em boas condições, comprometendo-me a utilizá-los exclusivamente para fins profissionais e a devolvê-los ou informar qualquer perda/dano ao almoxarifado.
+                </p>
+                <div className="flex justify-between mt-16 pt-8">
+                  <div className="text-center">
+                    <div className="border-t border-black w-48"></div>
+                    <p className="text-sm mt-1">Assinatura do Requisitante</p>
+                    <p className="text-xs">{employeeName}</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="border-t border-black w-48"></div>
+                    <p className="text-sm mt-1">Assinatura do Almoxarife</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Folha de Saída por Funcionário - Visível apenas na impressão */}
-      {saidaList.length > 0 && employeeName.trim() && (
+      {saidaList.length > 0 && employeeName.trim() && !showPrintPreview && (
         <div className="print:block hidden">
           <div className="bg-white text-black p-8 max-w-2xl mx-auto">
             <h1 className="text-xl font-bold text-center mb-2">ALMOXARIFADO — REGISTRO DE SAÍDA DE MATERIAL</h1>
@@ -680,9 +759,30 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
                 </Button>
                 {showSignatureSheet && (
                   <Button onClick={handlePrint} className="bg-green-600 hover:bg-green-700 text-white">
-                    <Printer className="w-4 h-4 mr-1" /> Imprimir
+                    <Printer className="w-4 h-4 mr-1" /> Imprimir Termo/Registro
                   </Button>
                 )}
+              </div>
+            )}
+
+            {/* Prévia de impressão antes de registrar (qualquer tipo de item) */}
+            {saidaList.length > 0 && employeeName.trim() && !showSignatureSheet && (
+              <div className="mt-4 p-4 bg-gray-700/50 border border-gray-600 rounded-md">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-sm text-gray-300">
+                    📄 <strong>{saidaList.length} {saidaList.length === 1 ? 'item adicionado' : 'itens adicionados'}</strong> para saída de <strong>{employeeName}</strong>{employeeDepartment ? ` (${employeeDepartment})` : ''}
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={handlePrintPreview}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm"
+                  >
+                    <Printer className="w-4 h-4 mr-1" /> Visualizar / Imprimir Termo de Saída
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  O termo de saída pode ser impresso antes ou depois de registrar. Para EPI/Ferramenta também é gerado o Termo de Responsabilidade após o registro.
+                </p>
               </div>
             )}
           </CardContent>
