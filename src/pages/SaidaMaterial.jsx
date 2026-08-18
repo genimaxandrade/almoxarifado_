@@ -290,14 +290,45 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
   const openTermoEmNovaAba = (items, requisitante, setor) => {
     const epis = items.filter((s) => (s.item.type || '').toLowerCase() === 'epi');
     const materiais = items.filter((s) => (s.item.type || '').toLowerCase() !== 'epi');
+    let fichaAbriu = false;
+    let termoAbriu = false;
     if (epis.length > 0) {
-      openFichaEpiEmNovaAba(epis, requisitante, setor);
+      const w = openHtmlAsWindow(openFichaEpiHtml(epis, requisitante, setor), 'ficha-epi');
+      fichaAbriu = !!w;
     }
     if (materiais.length > 0) {
-      // Pequeno atraso para não disparar os dois popups ao mesmo tempo (navegador pode bloquear o segundo)
+      const w = openHtmlAsWindow(openTermoMateriaisHtml(materiais, requisitante, setor), 'termo-materiais');
+      termoAbriu = !!w;
+    }
+    // Se o navegador bloqueou alguma guia, mostra aviso com botão para abri-la manualmente
+    if ((epis.length > 0 && !fichaAbriu) || (materiais.length > 0 && !termoAbriu)) {
+      setMessage(
+        '⚠️ O navegador bloqueou a abertura da(s) guia(s) do(s) termo(s). Permita pop-ups para este site (ícone na barra de endereço) ou clique em "Abrir Termo" abaixo.'
+      );
+      // Tenta abrir com interação direta (clique) após o aviso
       setTimeout(() => {
-        openTermoMateriaisEmNovaAba(materiais, requisitante, setor);
-      }, 700);
+        if (epis.length > 0 && !fichaAbriu) {
+          openFichaEpiEmNovaAba(epis, requisitante, setor);
+        }
+        if (materiais.length > 0 && !termoAbriu) {
+          openTermoMateriaisEmNovaAba(materiais, requisitante, setor);
+        }
+      }, 1500);
+    }
+  };
+
+  const openHtmlAsWindow = (html, name) => {
+    try {
+      const win = window.open('', name, 'width=900,height=700');
+      if (win) {
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+        return win;
+      }
+      return null;
+    } catch {
+      return null;
     }
   };
 
@@ -314,6 +345,10 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
 
   // TERMO DE ENTREGA DE MATERIAIS (baseado no modelo FO-NPE-236)
   const openTermoMateriaisEmNovaAba = (items, requisitante, setor) => {
+    openHtmlAsWindow(openTermoMateriaisHtml(items, requisitante, setor), 'termo-materiais');
+  };
+
+  const openTermoMateriaisHtml = (items, requisitante, setor) => {
     const emp = selectedEmployeeData;
     const dataStr = new Date().toLocaleDateString('pt-BR');
     const rows = items
@@ -390,11 +425,15 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
   <script>setTimeout(() => window.print(), 400);</script>
 </body>
 </html>`;
-    openHtmlInNewTab(html);
+    return html;
   };
 
   // FICHA DE ENTREGA DE EPIS (baseada no modelo FICHADEEPIs.docx)
   const openFichaEpiEmNovaAba = (items, requisitante, setor) => {
+    openHtmlAsWindow(openFichaEpiHtml(items, requisitante, setor), 'ficha-epi');
+  };
+
+  const openFichaEpiHtml = (items, requisitante, setor) => {
     const emp = selectedEmployeeData;
     const dataStr = new Date().toLocaleDateString('pt-BR');
     const rows = items
@@ -465,7 +504,7 @@ export function SaidaMaterial({ items, onItemsUpdated, userEmail }) {
   <script>setTimeout(() => window.print(), 400);</script>
 </body>
 </html>`;
-    openHtmlInNewTab(html);
+    return html;
   };
 
   const handlePrintPreview = () => {
